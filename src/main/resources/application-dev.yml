@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3307/ice-cms?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8
+    username: root
+    password: p@ssw0rd
+    type: com.alibaba.druid.pool.DruidDataSource #Druid类型
+    druid:
+      web-stat-filter: #监控Web
+        enabled: true
+      stat-view-servlet: #后台页面 http://localhost:8080/druid/login.html
+        enabled: true
+        login-username: root # 用户名
+        login-password: p@ssw0rd # 密码
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password:
+    timeout: 2000
+    jedis:
+      pool.max-active: 10
+      pool.max-idle: 6
+      pool.min-idle: 2
+  liquibase:
+    # 自动跑脚本
+    enabled: false
+    change-log: classpath:/liquibase/master.xml
+
+logging:
+  level:
+    root: debug
+    com.shih: debug
+  file:
+    path: e:/wwwroot/log1  #日志保存路径
