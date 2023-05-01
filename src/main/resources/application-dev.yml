@@ -26,9 +26,17 @@ spring:
     enabled: false
     change-log: classpath:/liquibase/master.xml
 
-logging:
-  level:
-    root: debug
-    com.shih: debug
-  file:
-    path: e:/wwwroot/log1  #日志保存路径
+#logging:
+#  level:
+#    root: debug
+#    com.shih: debug
+#  file:
+#    path: e:/wwwroot/log1  #日志保存路径
+minio:
+  endpoint: http://192.168.0.112:9000 #Minio服务所在地址
+  bucketName: tulaoda #存储桶名称
+  accessKey: WHuOnmrpKpH1xuZ6 #访问的key
+  secretKey: iKLKkPdVAPVcNanYv2c60wbnxT4LP5Co #访问的秘钥
+shiro:
+  web:
+    enabled: false
