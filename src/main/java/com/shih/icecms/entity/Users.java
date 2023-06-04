@@ -1,7 +1,9 @@
 package com.shih.icecms.entity;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+
+import java.io.Serializable;
 
 /**
  * 用户表
@@ -12,7 +14,7 @@ public class Users implements Serializable {
     /**
      * 
      */
-    private Integer id;
+    private String id;
 
     /**
      * 
@@ -27,11 +29,13 @@ public class Users implements Serializable {
     /**
      * 
      */
+    @JsonIgnore
     private String password;
 
     /**
      * 
      */
+    @JsonIgnore
     private String passwordSalt;
 
     /**
@@ -42,12 +46,19 @@ public class Users implements Serializable {
     /**
      * 
      */
+    @JsonIgnore
     private String phone;
 
     /**
      * 
      */
     private Integer status;
+
+    /**
+     * 
+     */
+    private String dingtalkId;
+    private String avatar;
 
     private static final long serialVersionUID = 1L;
 
@@ -70,7 +81,8 @@ public class Users implements Serializable {
             && (this.getPasswordSalt() == null ? other.getPasswordSalt() == null : this.getPasswordSalt().equals(other.getPasswordSalt()))
             && (this.getEmail() == null ? other.getEmail() == null : this.getEmail().equals(other.getEmail()))
             && (this.getPhone() == null ? other.getPhone() == null : this.getPhone().equals(other.getPhone()))
-            && (this.getStatus() == null ? other.getStatus() == null : this.getStatus().equals(other.getStatus()));
+            && (this.getStatus() == null ? other.getStatus() == null : this.getStatus().equals(other.getStatus()))
+            && (this.getDingtalkId() == null ? other.getDingtalkId() == null : this.getDingtalkId().equals(other.getDingtalkId()));
     }
 
     @Override
@@ -85,6 +97,7 @@ public class Users implements Serializable {
         result = prime * result + ((getEmail() == null) ? 0 : getEmail().hashCode());
         result = prime * result + ((getPhone() == null) ? 0 : getPhone().hashCode());
         result = prime * result + ((getStatus() == null) ? 0 : getStatus().hashCode());
+        result = prime * result + ((getDingtalkId() == null) ? 0 : getDingtalkId().hashCode());
         return result;
     }
 
@@ -102,6 +115,7 @@ public class Users implements Serializable {
         sb.append(", email=").append(email);
         sb.append(", phone=").append(phone);
         sb.append(", status=").append(status);
+        sb.append(", dingtalkId=").append(dingtalkId);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

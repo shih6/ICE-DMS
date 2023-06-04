@@ -5,10 +5,10 @@ import lombok.Data;
 
 /**
  * 
- * @TableName user_roles
+ * @TableName system_enum
  */
 @Data
-public class UserRoles implements Serializable {
+public class SystemEnum implements Serializable {
     /**
      * 
      */
@@ -17,12 +17,17 @@ public class UserRoles implements Serializable {
     /**
      * 
      */
-    private String userId;
+    private String objectName;
 
     /**
      * 
      */
-    private Integer roleId;
+    private Integer key;
+
+    /**
+     * 
+     */
+    private String value;
 
     private static final long serialVersionUID = 1L;
 
@@ -37,10 +42,11 @@ public class UserRoles implements Serializable {
         if (getClass() != that.getClass()) {
             return false;
         }
-        UserRoles other = (UserRoles) that;
+        SystemEnum other = (SystemEnum) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getUserId() == null ? other.getUserId() == null : this.getUserId().equals(other.getUserId()))
-            && (this.getRoleId() == null ? other.getRoleId() == null : this.getRoleId().equals(other.getRoleId()));
+            && (this.getObjectName() == null ? other.getObjectName() == null : this.getObjectName().equals(other.getObjectName()))
+            && (this.getKey() == null ? other.getKey() == null : this.getKey().equals(other.getKey()))
+            && (this.getValue() == null ? other.getValue() == null : this.getValue().equals(other.getValue()));
     }
 
     @Override
@@ -48,8 +54,9 @@ public class UserRoles implements Serializable {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((getId() == null) ? 0 : getId().hashCode());
-        result = prime * result + ((getUserId() == null) ? 0 : getUserId().hashCode());
-        result = prime * result + ((getRoleId() == null) ? 0 : getRoleId().hashCode());
+        result = prime * result + ((getObjectName() == null) ? 0 : getObjectName().hashCode());
+        result = prime * result + ((getKey() == null) ? 0 : getKey().hashCode());
+        result = prime * result + ((getValue() == null) ? 0 : getValue().hashCode());
         return result;
     }
 
@@ -60,8 +67,9 @@ public class UserRoles implements Serializable {
         sb.append(" [");
         sb.append("Hash = ").append(hashCode());
         sb.append(", id=").append(id);
-        sb.append(", userId=").append(userId);
-        sb.append(", roleId=").append(roleId);
+        sb.append(", objectName=").append(objectName);
+        sb.append(", key=").append(key);
+        sb.append(", value=").append(value);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

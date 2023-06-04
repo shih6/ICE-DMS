@@ -6,11 +6,11 @@
 
     <resultMap id="BaseResultMap" type="com.shih.icecms.entity.RolesPermissions">
             <id property="id" column="id" jdbcType="INTEGER"/>
-            <result property="roleName" column="role_name" jdbcType="VARCHAR"/>
+            <result property="roleId" column="role_id" jdbcType="INTEGER"/>
             <result property="permission" column="permission" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,role_name,permission
+        id,role_id,permission
     </sql>
 </mapper>

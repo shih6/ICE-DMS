@@ -1,14 +1,15 @@
 package com.shih.icecms.entity;
 
 import java.io.Serializable;
+import java.util.Date;
 import lombok.Data;
 
 /**
  * 
- * @TableName user_roles
+ * @TableName file_changes
  */
 @Data
-public class UserRoles implements Serializable {
+public class FileChanges implements Serializable {
     /**
      * 
      */
@@ -17,12 +18,17 @@ public class UserRoles implements Serializable {
     /**
      * 
      */
-    private String userId;
+    private Integer fileHistoryId;
 
     /**
      * 
      */
-    private Integer roleId;
+    private Date created;
+
+    /**
+     * 
+     */
+    private String userId;
 
     private static final long serialVersionUID = 1L;
 
@@ -37,10 +43,11 @@ public class UserRoles implements Serializable {
         if (getClass() != that.getClass()) {
             return false;
         }
-        UserRoles other = (UserRoles) that;
+        FileChanges other = (FileChanges) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getUserId() == null ? other.getUserId() == null : this.getUserId().equals(other.getUserId()))
-            && (this.getRoleId() == null ? other.getRoleId() == null : this.getRoleId().equals(other.getRoleId()));
+            && (this.getFileHistoryId() == null ? other.getFileHistoryId() == null : this.getFileHistoryId().equals(other.getFileHistoryId()))
+            && (this.getCreated() == null ? other.getCreated() == null : this.getCreated().equals(other.getCreated()))
+            && (this.getUserId() == null ? other.getUserId() == null : this.getUserId().equals(other.getUserId()));
     }
 
     @Override
@@ -48,8 +55,9 @@ public class UserRoles implements Serializable {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((getId() == null) ? 0 : getId().hashCode());
+        result = prime * result + ((getFileHistoryId() == null) ? 0 : getFileHistoryId().hashCode());
+        result = prime * result + ((getCreated() == null) ? 0 : getCreated().hashCode());
         result = prime * result + ((getUserId() == null) ? 0 : getUserId().hashCode());
-        result = prime * result + ((getRoleId() == null) ? 0 : getRoleId().hashCode());
         return result;
     }
 
@@ -60,8 +68,9 @@ public class UserRoles implements Serializable {
         sb.append(" [");
         sb.append("Hash = ").append(hashCode());
         sb.append(", id=").append(id);
+        sb.append(", fileHistoryId=").append(fileHistoryId);
+        sb.append(", created=").append(created);
         sb.append(", userId=").append(userId);
-        sb.append(", roleId=").append(roleId);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

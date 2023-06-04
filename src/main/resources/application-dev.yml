@@ -21,6 +21,7 @@ spring:
       pool.max-active: 10
       pool.max-idle: 6
       pool.min-idle: 2
+    database: 2
   liquibase:
     # 自动跑脚本
     enabled: false
@@ -40,3 +41,11 @@ minio:
 shiro:
   web:
     enabled: false
+
+dingtalk:
+  AgentId: 1929550759
+  crop_id: dingcc8bab22f32d33d0
+  appkey: dingrrcbwultqnvyutli
+  appsecret: BDl3Bm_J-oEpX7qIcyNenrfm2qc8GPHj244dt5McXb5rVV3jrFFpftnmS8_kIrms
+  aes_key: mjDbijH8qfXWmtbUJdjAetyJdCcweUmMw9k72sPEgmS
+  token: apDZfA6QKQUEu3PBYOHqPUXdGJfK

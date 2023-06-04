@@ -1,8 +1,7 @@
 package com.shih.icecms.entity;
 
-import lombok.Data;
-
 import java.io.Serializable;
+import lombok.Data;
 
 /**
  * 
@@ -18,7 +17,7 @@ public class RolesPermissions implements Serializable {
     /**
      * 
      */
-    private String roleName;
+    private Integer roleId;
 
     /**
      * 
@@ -40,7 +39,7 @@ public class RolesPermissions implements Serializable {
         }
         RolesPermissions other = (RolesPermissions) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getRoleName() == null ? other.getRoleName() == null : this.getRoleName().equals(other.getRoleName()))
+            && (this.getRoleId() == null ? other.getRoleId() == null : this.getRoleId().equals(other.getRoleId()))
             && (this.getPermission() == null ? other.getPermission() == null : this.getPermission().equals(other.getPermission()));
     }
 
@@ -49,7 +48,7 @@ public class RolesPermissions implements Serializable {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((getId() == null) ? 0 : getId().hashCode());
-        result = prime * result + ((getRoleName() == null) ? 0 : getRoleName().hashCode());
+        result = prime * result + ((getRoleId() == null) ? 0 : getRoleId().hashCode());
         result = prime * result + ((getPermission() == null) ? 0 : getPermission().hashCode());
         return result;
     }
@@ -61,7 +60,7 @@ public class RolesPermissions implements Serializable {
         sb.append(" [");
         sb.append("Hash = ").append(hashCode());
         sb.append(", id=").append(id);
-        sb.append(", roleName=").append(roleName);
+        sb.append(", roleId=").append(roleId);
         sb.append(", permission=").append(permission);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");

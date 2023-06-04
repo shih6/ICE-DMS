@@ -1,8 +1,8 @@
 package com.shih.icecms.utils;
 
-import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.shih.icecms.config.MinioConfig;
 import io.minio.*;
+import io.minio.errors.MinioException;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import io.minio.messages.Item;
@@ -10,14 +10,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FastByteArrayOutputStream;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Component
 @Slf4j
@@ -91,21 +95,28 @@ public class MinioUtil {
     /**
      * 文件上传
      *
-     * @param file 文件
+     * @param url 文件路径
      * @return Boolean
      */
-    public String upload(MultipartFile file) {
-        String originalFilename = file.getOriginalFilename();
-        if (StringUtils.isBlank(originalFilename)){
-            throw new RuntimeException();
+    public String upload(URL url, String objectName){
+        try {
+            URLConnection urlConnection=url.openConnection();
+            PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(prop.getBucketName()).object(objectName)
+                    .stream(urlConnection.getInputStream(),urlConnection.getContentLength(),-1).contentType(urlConnection.getContentType()).build();
+            //文件名称相同会覆盖
+            minioClient.putObject(objectArgs);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
-        String fileName = UUID.randomUUID() + originalFilename.substring(originalFilename.lastIndexOf("."));
-        String objectName = "2023-05/01/" + fileName;
+        return objectName;
+    }
+    public String upload(MultipartFile file,String objectName) {
         try {
             PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(prop.getBucketName()).object(objectName)
                     .stream(file.getInputStream(), file.getSize(), -1).contentType(file.getContentType()).build();
             //文件名称相同会覆盖
-            minioClient.putObject(objectArgs);
+            ObjectWriteResponse response=minioClient.putObject(objectArgs);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -132,13 +143,29 @@ public class MinioUtil {
 
     /**
      * 文件下载
-     * @param fileName 文件名称
+     * @param objectName 对象名
      * @param res response
      * @return Boolean
      */
-    public void download(String fileName, HttpServletResponse res) {
+    public void download(String objectName, HttpServletResponse res) throws MinioException, IOException {
+        download(objectName, res,null);
+    }
+    /**
+     * 文件下载
+     * @param objectName 对象名
+     * @param res response
+     * @param fileName 自定义文件名
+     * @return Boolean
+     */
+    public void download(String objectName, HttpServletResponse res,String fileName) throws MinioException, IOException {
+        StatObjectResponse statObjectResponse;
+        try{
+            statObjectResponse=minioClient.statObject(StatObjectArgs.builder().bucket(prop.getBucketName()).object(objectName).build());
+        }catch (Exception e){
+            throw new MinioException(e.getMessage());
+        }
         GetObjectArgs objectArgs = GetObjectArgs.builder().bucket(prop.getBucketName())
-                .object(fileName).build();
+                .object(objectName).build();
         try (GetObjectResponse response = minioClient.getObject(objectArgs)){
             byte[] buf = new byte[1024];
             int len;
@@ -150,8 +177,11 @@ public class MinioUtil {
                 byte[] bytes = os.toByteArray();
                 res.setCharacterEncoding("utf-8");
                 // 设置强制下载不打开
-                // res.setContentType("application/force-download");
-                res.addHeader("Content-Disposition", "attachment;fileName=" + fileName);
+                res.setContentType("application/octet-stream");
+                res.setHeader("Accept-Ranges","bytes");
+                res.setContentLength(bytes.length);
+                res.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(StringUtils.isEmpty(fileName)?objectName:fileName, "utf-8"));
+
                 try (ServletOutputStream stream = res.getOutputStream()){
                     stream.write(bytes);
                     stream.flush();
@@ -194,6 +224,20 @@ public class MinioUtil {
             return false;
         }
         return true;
+    }
+    /**
+     * 获取临时授权地址
+     * @param fileName 文件名(key)
+     * @param expireTime second
+     * @return
+     * @throws Exception
+     */
+    public String GetTemporaryAccessUrl(String fileName,int expireTime){
+        try {
+            return minioClient.getPresignedObjectUrl( GetPresignedObjectUrlArgs.builder().bucket(prop.getBucketName()).expiry(expireTime).object(fileName).method(Method.GET).build());
+        }catch (Exception e){
+            throw new RuntimeException("获取零时地址失败");
+        }
     }
 
 }
