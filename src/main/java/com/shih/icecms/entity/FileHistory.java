@@ -54,6 +54,10 @@ public class FileHistory implements Serializable {
      * 
      */
     private String changesObjectName;
+    /**
+     *
+     */
+    private String objectName;
 
     private static final long serialVersionUID = 1L;
 
@@ -76,7 +80,8 @@ public class FileHistory implements Serializable {
             && (this.getUserId() == null ? other.getUserId() == null : this.getUserId().equals(other.getUserId()))
             && (this.getVersion() == null ? other.getVersion() == null : this.getVersion().equals(other.getVersion()))
             && (this.getServerVersion() == null ? other.getServerVersion() == null : this.getServerVersion().equals(other.getServerVersion()))
-            && (this.getChangesObjectName() == null ? other.getChangesObjectName() == null : this.getChangesObjectName().equals(other.getChangesObjectName()));
+            && (this.getChangesObjectName() == null ? other.getChangesObjectName() == null : this.getChangesObjectName().equals(other.getChangesObjectName()))
+            && (this.getObjectName() == null ? other.getObjectName() == null : this.getObjectName().equals(other.getObjectName()));
     }
 
     @Override
@@ -91,6 +96,7 @@ public class FileHistory implements Serializable {
         result = prime * result + ((getVersion() == null) ? 0 : getVersion().hashCode());
         result = prime * result + ((getServerVersion() == null) ? 0 : getServerVersion().hashCode());
         result = prime * result + ((getChangesObjectName() == null) ? 0 : getChangesObjectName().hashCode());
+        result = prime * result + ((getObjectName() == null) ? 0 : getObjectName().hashCode());
         return result;
     }
 
@@ -109,6 +115,7 @@ public class FileHistory implements Serializable {
         sb.append(", serverVersion=").append(serverVersion);
         sb.append(", changesObjectName=").append(changesObjectName);
         sb.append(", serialVersionUID=").append(serialVersionUID);
+        sb.append(", getObjectName=").append(objectName);
         sb.append("]");
         return sb.toString();
     }

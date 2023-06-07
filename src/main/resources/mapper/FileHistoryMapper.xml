@@ -13,11 +13,12 @@
             <result property="version" column="version" jdbcType="INTEGER"/>
             <result property="serverVersion" column="server_version" jdbcType="VARCHAR"/>
             <result property="changesObjectName" column="changes_object_name" jdbcType="VARCHAR"/>
+        <result property="objectName" column="object_name" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,matter_id,doc_key,
         created,user_id,version,
-        server_version,changes_object_name
+        server_version,changes_object_name,object_name
     </sql>
 </mapper>

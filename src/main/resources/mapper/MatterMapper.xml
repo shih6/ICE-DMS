@@ -20,4 +20,19 @@
         type,create_time,modified_time,
         creator,status
     </sql>
+<!--    TODO resultType-->
+    <select id="getMatterList" resultType="com.shih.icecms.entity.Matter">
+        -- fullAction creator权限大小
+        SELECT m.*, CASE WHEN m.creator='test' THEN #{fullAction} ELSE mp.action END AS action
+        FROM matter m
+            left JOIN matter_permissions mp ON m.id = mp.matter_id
+            LEFT JOIN user_roles ur ON mp.role_id = ur.role_id AND ur.user_id = #{userId} AND mp.role_type = 0
+        WHERE
+            -- user权限
+            (mp.role_id = #{userId} AND mp.role_type = 1 )
+            -- role权限
+           OR (mp.role_type = 0 AND ur.user_id = #{userId} )
+            -- creator权限
+           OR m.creator=#{userId};
+    </select>
 </mapper>

@@ -35,7 +35,7 @@ public class UserController {
     }
 
     @ApiOperation("钉钉鉴权登录V2")
-    @GetMapping( value = "/auth")
+    @GetMapping( value = "/login/auth")
     public ApiResult qrLogin(@ApiParam("钉钉给的AuthCode")@RequestParam(value = "auth_code")String authCode) {
         String rId=usersService.getRId(authCode);
         Users users=usersService.getOne(new QueryWrapper<Users>().lambda().eq(Users::getDingtalkId,rId));

@@ -5,10 +5,10 @@ import lombok.Data;
 
 /**
  * 
- * @TableName roles_permissions
+ * @TableName role
  */
 @Data
-public class RolesPermissions implements Serializable {
+public class Role implements Serializable {
     /**
      * 
      */
@@ -17,12 +17,12 @@ public class RolesPermissions implements Serializable {
     /**
      * 
      */
-    private Integer roleId;
+    private String roleName;
 
     /**
      * 
      */
-    private String permission;
+    private String roleDesc;
 
     private static final long serialVersionUID = 1L;
 
@@ -37,10 +37,10 @@ public class RolesPermissions implements Serializable {
         if (getClass() != that.getClass()) {
             return false;
         }
-        RolesPermissions other = (RolesPermissions) that;
+        Role other = (Role) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getRoleId() == null ? other.getRoleId() == null : this.getRoleId().equals(other.getRoleId()))
-            && (this.getPermission() == null ? other.getPermission() == null : this.getPermission().equals(other.getPermission()));
+            && (this.getRoleName() == null ? other.getRoleName() == null : this.getRoleName().equals(other.getRoleName()))
+            && (this.getRoleDesc() == null ? other.getRoleDesc() == null : this.getRoleDesc().equals(other.getRoleDesc()));
     }
 
     @Override
@@ -48,8 +48,8 @@ public class RolesPermissions implements Serializable {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((getId() == null) ? 0 : getId().hashCode());
-        result = prime * result + ((getRoleId() == null) ? 0 : getRoleId().hashCode());
-        result = prime * result + ((getPermission() == null) ? 0 : getPermission().hashCode());
+        result = prime * result + ((getRoleName() == null) ? 0 : getRoleName().hashCode());
+        result = prime * result + ((getRoleDesc() == null) ? 0 : getRoleDesc().hashCode());
         return result;
     }
 
@@ -60,8 +60,8 @@ public class RolesPermissions implements Serializable {
         sb.append(" [");
         sb.append("Hash = ").append(hashCode());
         sb.append(", id=").append(id);
-        sb.append(", roleId=").append(roleId);
-        sb.append(", permission=").append(permission);
+        sb.append(", roleName=").append(roleName);
+        sb.append(", roleDesc=").append(roleDesc);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

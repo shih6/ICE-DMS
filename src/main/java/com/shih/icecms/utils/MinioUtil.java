@@ -210,7 +210,24 @@ public class MinioUtil {
         }
         return items;
     }
-
+    /**
+     * 查看文件对象
+     * @return 存储bucket内文件对象信息
+     */
+    public List<Item> listVersions(String objectName) {
+        Iterable<Result<Item>> results = minioClient.listObjects(
+                ListObjectsArgs.builder().bucket(prop.getBucketName()).startAfter(objectName).includeVersions(true).build());
+        List<Item> items = new ArrayList<>();
+        try {
+            for (Result<Item> result : results) {
+                items.add(result.get());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        return items;
+    }
     /**
      * 删除
      * @param fileName

@@ -121,7 +121,15 @@ public class JwtUtil {
                 .parseClaimsJws(jwt)
                 .getBody();
     }
-
+    /**
+     * 判断过期
+     *
+     * @param token
+     * @return
+     */
+    public static boolean isExpire(String token) throws Exception {
+        return System.currentTimeMillis() > parseJWT(token).getExpiration().getTime();
+    }
     //测试方法
     public static void main(String[] args) throws Exception {
         //JWT加密

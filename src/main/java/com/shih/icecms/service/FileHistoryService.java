@@ -12,5 +12,7 @@ import java.util.List;
 * @createDate 2023-05-03 20:45:36
 */
 public interface FileHistoryService extends IService<FileHistory> {
-    List<History> GetHistoryByFileId(String fileId);
+    List<History> GetOnlyOfficeHistoryByFileId(String fileId);
+
+    List<FileHistory> getFileHistoryByMatterId(String matterId);
 }

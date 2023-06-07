@@ -11,6 +11,7 @@ import com.shih.icecms.entity.Matter;
 import com.shih.icecms.service.FileChangesService;
 import com.shih.icecms.service.FileHistoryService;
 import com.shih.icecms.service.MatterService;
+import com.shih.icecms.utils.CommonUtil;
 import com.shih.icecms.utils.MinioUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -44,14 +45,15 @@ public class OnlyOfficeController {
 
     @GetMapping("/getDocumentConfig")
     @ApiOperation(value = "获取config")
-    public ResponseEntity GetDocumentConfig(@RequestParam String fileKey){
-        Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getFileId,fileKey).eq(Matter::getType,1).orderBy(true,false, Matter::getVersion).last("limit 1"));
+    public ResponseEntity GetDocumentConfig(@RequestParam String matterId){
+        Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId,matterId).eq(Matter::getType,1));
         if(matter !=null){
+            FileHistory fileHistory=fileHistoryService.getOne(new LambdaQueryWrapper<FileHistory>().eq(FileHistory::getMatterId,matterId).orderBy(true,false,FileHistory::getCreated).last("limit 1"));
             DocumentConfig documentConfig=new DocumentConfig();
             documentConfig.setTitle(matter.getName());
-            documentConfig.setUrl("http://192.168.0.112:8080/download?fileId="+ matter.getFileId()+"&fileVersion="+ matter.getVersion()+"&fileType="+ matter.getType());
-            documentConfig.setHistories(fileHistoryService.GetHistoryByFileId(fileKey));
-            documentConfig.setKey(fileKey);
+            documentConfig.setUrl("http://192.168.0.112:8080/download?fileId="+ matter.getId()+"&fileVersion="+ fileHistory.getVersion()+"&fileType="+ matter.getType());
+            documentConfig.setHistories(fileHistoryService.GetOnlyOfficeHistoryByFileId(matterId));
+            documentConfig.setKey(fileHistory.getDocKey());
             return ResponseEntity.ok().body(documentConfig);
         }
         return ResponseEntity.badRequest().build();
@@ -63,41 +65,41 @@ public class OnlyOfficeController {
         log.info(track.toString());
         if(track.getStatus()==2||track.getStatus()==3){
             if(StringUtils.hasText(track.getKey())){
-                // 获取当前文档版本
-                Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getFileId,track.getKey()).eq(Matter::getType,1).last("limit 1"));
-                Integer version= matter.getVersion();
-                String fileId= matter.getFileId();
-                if(version==1){
-                    FileHistory fileHistory=new FileHistory(null,track.getKey(), UUID.randomUUID().toString(),new Date(),"test",1,track.getHistory().getServerVersion(),null);
-                    fileHistoryService.save(fileHistory);
-                }
-                version++;
+                FileHistory current = fileHistoryService.getOne(new LambdaQueryWrapper<FileHistory>().eq(FileHistory::getDocKey,track.getKey()));
+                Matter matter=matterService.getById(current.getMatterId());
+                // 获取最新文档历史记录
+                FileHistory fileHistory=fileHistoryService.getOne(new LambdaQueryWrapper<FileHistory>().
+                        eq(FileHistory::getMatterId,matter.getId()).
+                        orderBy(true,false,FileHistory::getCreated).
+                        last("limit 1"));
+                Integer version= fileHistory.getVersion();
+
                 // 保存文档内容
-                Matter tmp=new Matter();
-                tmp.setVersion(version);
-                tmp.setPath(fileId+"/"+version+ matter.getName().substring(matter.getName().lastIndexOf(".")));
-                tmp.setCreator("test");
-                tmp.setType(1);
-                tmp.setName(matter.getName());
-                tmp.setFileId(matter.getFileId());
-                tmp.setParentId(matter.getParentId());
-                tmp.setStatus(1);
-                minioUtil.upload(new URL(track.getUrl()), tmp.getPath());
-                matterService.save(tmp);
+                FileHistory newHistory=new FileHistory();
+                //TODO
+                newHistory.setCreated(new Date());
+                newHistory.setUserId("test");
+                newHistory.setMatterId(matter.getId());
+                newHistory.setDocKey(UUID.randomUUID().toString());
+                newHistory.setVersion(version+1);
+                newHistory.setObjectName(matter.getParentId()+"/"+ CommonUtil.getFileNameWithOutExt(matter.getName()) +"-"+newHistory.getVersion()+
+                        CommonUtil.getFilenameExtensionWithDot(matter.getName()));
+                newHistory.setServerVersion(track.getHistory().getServerVersion());
                 // 保存changes.zip
-                String objectName=fileId+"/"+version+".zip";
+                String objectName=newHistory.getObjectName()+"/"+version+".zip";
                 minioUtil.upload(new URL(track.getChangesurl()), objectName);
-                if(matter !=null){
-                    FileHistory fileHistory=new FileHistory(null,track.getKey(), UUID.randomUUID().toString(),new Date(),"test",version,track.getHistory().getServerVersion(),objectName);
-                    fileHistoryService.save(fileHistory);
-                    for (ChangesHistory change:track.getHistory().getChanges()) {
-                        FileChanges fileChanges=new FileChanges();
-                        fileChanges.setFileHistoryId(fileHistory.getId());
-                        fileChanges.setCreated(new Date());
-                        fileChanges.setUserId(change.getUser().getId());
-                        fileChangesService.save(fileChanges);
-                    }
+                newHistory.setChangesObjectName(objectName);
+
+                minioUtil.upload(new URL(track.getUrl()), newHistory.getObjectName());
+                fileHistoryService.save(newHistory);
+                for (ChangesHistory change:track.getHistory().getChanges()) {
+                    FileChanges fileChanges=new FileChanges();
+                    fileChanges.setFileHistoryId(newHistory.getId());
+                    fileChanges.setCreated(new Date());
+                    fileChanges.setUserId(change.getUser().getId());
+                    fileChangesService.save(fileChanges);
                 }
+
             }
 
         }
