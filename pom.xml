@@ -67,6 +67,17 @@
 			<artifactId>druid-spring-boot-starter</artifactId>
 			<version>1.2.17</version>
 		</dependency>
+<!--		bcrypt-->
+		<dependency>
+			<groupId>de.svenkubiak</groupId>
+			<artifactId>jBCrypt</artifactId>
+			<version>0.4.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.auth0</groupId>
+			<artifactId>java-jwt</artifactId>
+			<version>4.4.0</version>
+		</dependency>
 
 		<!--swagger-->
 		<dependency>

@@ -1,6 +1,7 @@
 package com.shih.icecms.config;
 
 import com.shih.icecms.shiro.JWTFilter;
+import com.shih.icecms.shiro.MyHashedCredentialsMatcher;
 import com.shih.icecms.shiro.UserRealm;
 import org.apache.shiro.mgt.DefaultSessionStorageEvaluator;
 import org.apache.shiro.mgt.DefaultSubjectDAO;
@@ -8,6 +9,7 @@ import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.spring.web.config.DefaultShiroFilterChainDefinition;
 import org.apache.shiro.spring.web.config.ShiroFilterChainDefinition;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,7 +19,8 @@ import java.util.Map;
 
 @Configuration
 public class ShiroConfig {
-
+    @Autowired
+    MyHashedCredentialsMatcher myHashedCredentialsMatcher;
 
 
     // 配置url过滤器
@@ -45,7 +48,7 @@ public class ShiroConfig {
         Map<String, String> filterRuleMap = new HashMap<>();
         filterRuleMap.put("/user/login", "anon");
         // 所有请求通过我们自己的JWT Filter
-        filterRuleMap.put("/**", "anon");
+        filterRuleMap.put("/**", "jwt");
         // 访问401和404页面不通过我们的Filter
         //开放API文档接口
         filterRuleMap.put("/swagger-ui.html", "anon");
@@ -60,10 +63,10 @@ public class ShiroConfig {
 
     @Bean
     public DefaultWebSecurityManager securityManager(UserRealm realm) {
+        realm.setCredentialsMatcher(myHashedCredentialsMatcher);
         DefaultWebSecurityManager manager = new DefaultWebSecurityManager();
         // 使用自己的realm
         manager.setRealm(realm);
-
         /*
          * 关闭shiro自带的session，详情见文档
          * http://shiro.apache.org/session-management.html#SessionManagement-StatelessApplications%28Sessionless%29

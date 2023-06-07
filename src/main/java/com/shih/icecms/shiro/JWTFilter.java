@@ -1,5 +1,6 @@
 package com.shih.icecms.shiro;
 
+import com.alibaba.fastjson.JSON;
 import com.shih.icecms.dto.ApiResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
@@ -46,9 +47,6 @@ public class JWTFilter extends BasicHttpAuthenticationFilter {
     protected boolean onAccessDenied(ServletRequest request, ServletResponse response){
         //完成token登入
         //1.检查请求头中是否含有token
-        if(1==1){
-            return true;
-        }
         HttpServletRequest httpServletRequest= (HttpServletRequest) request;
         String token = httpServletRequest.getHeader("Authorization");
         //2. 如果客户端没有携带token，拦下请求
@@ -62,7 +60,7 @@ public class JWTFilter extends BasicHttpAuthenticationFilter {
             SecurityUtils.getSubject().login(jwtToken);
         } catch (AuthenticationException e) {
             log.error(e.getMessage());
-            responseTokenError(response,ApiResult.ERROR("权限不足"));
+            responseTokenError(response,ApiResult.ERROR(e.getMessage()));
             return false;
         }
 
@@ -95,7 +93,7 @@ public class JWTFilter extends BasicHttpAuthenticationFilter {
         httpServletResponse.setCharacterEncoding("UTF-8");
         httpServletResponse.setContentType("application/json; charset=utf-8");
         try (PrintWriter out = httpServletResponse.getWriter()) {
-            out.append(result.toString());
+            out.append(JSON.toJSONString(result));
         } catch (IOException e) {
             e.printStackTrace();
             log.error(e.getMessage());

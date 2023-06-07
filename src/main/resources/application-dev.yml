@@ -27,10 +27,10 @@ spring:
     enabled: false
     change-log: classpath:/liquibase/master.xml
 
-#logging:
-#  level:
-#    root: debug
-#    com.shih: debug
+logging:
+  level:
+    root: trace
+    com.shih: trace
 #  file:
 #    path: e:/wwwroot/log1  #日志保存路径
 minio:

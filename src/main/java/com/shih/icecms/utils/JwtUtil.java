@@ -1,5 +1,6 @@
 package com.shih.icecms.utils;
 
+import com.alibaba.fastjson.JSON;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
@@ -7,9 +8,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.util.Base64;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Jwt工具类
@@ -21,7 +20,7 @@ public class JwtUtil {
     /**
      * 有效期
      */
-    public static final Long JWT_TTL = 0L;
+    public static final Long JWT_TTL = 72 * 60 * 60 * 1000L;
     /**
      * 设置秘钥明文
      */
@@ -32,7 +31,17 @@ public class JwtUtil {
         String token = UUID.randomUUID().toString().replaceAll("-", "");
         return token;
     }
-
+    /**
+     * 生成 jtw
+     */
+    public static String createJWT(String userName,String userId) {
+        // 设置过期时间 空
+        Map<String,String> json=new HashMap<>();
+        json.put("userName",userName);
+        json.put("userId",userId);
+        JwtBuilder builder = getJwtBuilder(JSON.toJSONString(json), null, getUUID());
+        return builder.compact();
+    }
     /**
      * 生成 jtw
      *
@@ -41,7 +50,7 @@ public class JwtUtil {
      */
     public static String createJWT(String subject) {
         // 设置过期时间 空
-        JwtBuilder builder = getJwtBuilder(subject, null, getUUID());
+        JwtBuilder builder = getJwtBuilder(subject, JWT_TTL, getUUID());
         return builder.compact();
     }
 
