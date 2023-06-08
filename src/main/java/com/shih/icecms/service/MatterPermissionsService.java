@@ -1,7 +1,8 @@
 package com.shih.icecms.service;
 
-import com.shih.icecms.entity.MatterPermissions;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.shih.icecms.entity.MatterPermissions;
+import com.shih.icecms.enums.ActionEnum;
 
 /**
 * @author 1
@@ -9,5 +10,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2023-06-04 20:47:35
 */
 public interface MatterPermissionsService extends IService<MatterPermissions> {
-
+    Integer getMatterPermission(String matterId,String userId);
+    boolean checkMatterPermission(String matterId, ActionEnum actionEnum);
 }

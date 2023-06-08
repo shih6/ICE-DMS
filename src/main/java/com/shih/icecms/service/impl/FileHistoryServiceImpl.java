@@ -7,7 +7,7 @@ import com.shih.icecms.dto.History;
 import com.shih.icecms.dto.UserDTO;
 import com.shih.icecms.entity.FileChanges;
 import com.shih.icecms.entity.FileHistory;
-import com.shih.icecms.entity.Users;
+import com.shih.icecms.entity.User;
 import com.shih.icecms.mapper.FileHistoryMapper;
 import com.shih.icecms.service.FileChangesService;
 import com.shih.icecms.service.FileHistoryService;
@@ -40,15 +40,15 @@ public class FileHistoryServiceImpl extends ServiceImpl<FileHistoryMapper, FileH
         List<FileHistory> fileHistories = list(new LambdaQueryWrapper<FileHistory>().eq(FileHistory::getMatterId, fileId).orderBy(true,false,FileHistory::getCreated));
         List<History> histories = new ArrayList<>();
         for (FileHistory fileHistory : fileHistories) {
-            Users users = usersService.getById(fileHistory.getUserId());
-            History history = new History(fileHistory.getServerVersion(), fileHistory.getDocKey()+fileHistory.getVersion(), fileHistory.getVersion(), fileHistory.getCreated().toString(), new UserDTO(users.getId(), users.getActualName()), null,null, new ArrayList<>());
+            User user = usersService.getById(fileHistory.getUserId());
+            History history = new History(fileHistory.getServerVersion(), fileHistory.getDocKey()+fileHistory.getVersion(), fileHistory.getVersion(), fileHistory.getCreated().toString(), new UserDTO(user.getId(), user.getActualName()), null,null, new ArrayList<>());
             history.setUrl("http://192.168.0.112:8080/download?fileId="+fileHistory.getMatterId()+"&fileVersion="+fileHistory.getVersion());
             if(StringUtils.hasText(fileHistory.getChangesObjectName())){
                 history.setChangesUrl("http://192.168.0.112:8080/downloadByObjectName?objectName="+ UriEncoder.encode(fileHistory.getChangesObjectName()));
             }
             for (FileChanges changes : fileChangesService.list(new LambdaQueryWrapper<FileChanges>().eq(FileChanges::getFileHistoryId, fileHistory.getId()))) {
-                users = usersService.getById(changes.getUserId());
-                history.getChanges().add(new ChangesHistory(changes.getCreated().toString(), new UserDTO(users.getId(), users.getActualName())));
+                user = usersService.getById(changes.getUserId());
+                history.getChanges().add(new ChangesHistory(changes.getCreated().toString(), new UserDTO(user.getId(), user.getActualName())));
             }
             histories.add(history);
         }

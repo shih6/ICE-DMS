@@ -6,8 +6,10 @@ import com.shih.icecms.dto.ApiResult;
 import com.shih.icecms.dto.MatterDTO;
 import com.shih.icecms.entity.FileHistory;
 import com.shih.icecms.entity.Matter;
-import com.shih.icecms.entity.Users;
+import com.shih.icecms.entity.User;
+import com.shih.icecms.enums.ActionEnum;
 import com.shih.icecms.service.FileHistoryService;
+import com.shih.icecms.service.MatterPermissionsService;
 import com.shih.icecms.service.MatterService;
 import com.shih.icecms.utils.CommonUtil;
 import com.shih.icecms.utils.MinioUtil;
@@ -40,19 +42,22 @@ public class MatterController {
     private FileHistoryService fileHistoryService;
     @Autowired
     private ShiroUtil shiroUtil;
+    @Autowired
+    private MatterPermissionsService matterPermissionsService;
     @ApiOperation(value = "创建文件夹")
     @PostMapping("/matter/addFolder")
     public ApiResult addFolder(@RequestBody MatterDTO matterDTO){
-        Users users=shiroUtil.getLoginUser();
+        User user =shiroUtil.getLoginUser();
+        matterPermissionsService.checkMatterPermission(matterDTO.getParent_id(), ActionEnum.Edit);
         Matter matter=new Matter();
         matter.setCreateTime(new Date().getTime());
         matter.setName(matter.getName());
-        matter.setCreator(users.getId());
+        matter.setCreator(user.getId());
         matter.setStatus(1);
         // 文件夹
         matter.setType(0);
         matter.setModifiedTime(new Date().getTime());
-        matter.setParentId(users.getId());
+        matter.setParentId(user.getId());
         matterService.save(matter);
         return ApiResult.SUCCESS(matter);
     }
@@ -68,7 +73,8 @@ public class MatterController {
             @ApiParam(value = "文件夹id",defaultValue = "root",example = "root") @RequestParam String matterId,
             @ApiParam(value = "页数",defaultValue = "1",example = "1") @RequestParam(required = false,defaultValue = "1") int pageNum,
             @ApiParam(value = "单页大小",defaultValue = "100",example = "100") @RequestParam(required = false,defaultValue = "100") int pageSize){
-        Users users=shiroUtil.getLoginUser();
+        matterPermissionsService.checkMatterPermission(matterId, ActionEnum.View);
+        User user =shiroUtil.getLoginUser();
         Page<Matter> page = matterService.page(Page.of(pageNum, pageSize), new LambdaQueryWrapper<Matter>().eq(Matter::getParentId, matterId));
         return ApiResult.SUCCESS(page);
     }
@@ -77,16 +83,18 @@ public class MatterController {
     @PostMapping("/matter/add")
     @ApiOperation(value = "上传文件")
     public ApiResult upload(@RequestParam(value = "file") MultipartFile multipartFile, @RequestParam(required = false) String matterId) {
-        Users users=shiroUtil.getLoginUser();
+        matterPermissionsService.checkMatterPermission(matterId, ActionEnum.Edit);
+        User user =shiroUtil.getLoginUser();
         if(!StringUtils.hasText(matterId)){
-            matterId =users.getId();
+            matterId = user.getId();
         }
         FileHistory newHistory=new FileHistory();
         Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getParentId, matterId).eq(Matter::getType,1).eq(Matter::getName,multipartFile.getOriginalFilename()));
         if(matter !=null){
+            matterPermissionsService.checkMatterPermission(matterId, ActionEnum.Edit);
             List<FileHistory> fileHistoryList=fileHistoryService.getFileHistoryByMatterId(matter.getId());
             newHistory.setVersion(fileHistoryList.get(0).getVersion()+1);
-            newHistory.setUserId(users.getId());
+            newHistory.setUserId(user.getId());
             newHistory.setCreated(new Date());
             newHistory.setDocKey(UUID.randomUUID().toString());
             newHistory.setMatterId(matter.getId());
@@ -98,7 +106,7 @@ public class MatterController {
             minioUtil.upload(multipartFile, newHistory.getObjectName());
         }else{
             matter=new Matter();
-            matter.setCreator(users.getId());
+            matter.setCreator(user.getId());
             matter.setType(1);
             matter.setName(multipartFile.getOriginalFilename());
             matter.setParentId(matterId);
@@ -106,7 +114,7 @@ public class MatterController {
             matter.setCreateTime(new Date().getTime());
             matterService.save(matter);
             newHistory.setVersion(1);
-            newHistory.setUserId(users.getId());
+            newHistory.setUserId(user.getId());
             newHistory.setCreated(new Date());
             newHistory.setDocKey(UUID.randomUUID().toString());
             newHistory.setMatterId(matter.getId());

@@ -1,6 +1,6 @@
 package com.shih.icecms.mapper;
 
-import com.shih.icecms.entity.Users;
+import com.shih.icecms.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2023-06-04 19:30:15
 * @Entity com.shih.icecms.entity.Users
 */
-public interface UsersMapper extends BaseMapper<Users> {
+public interface UsersMapper extends BaseMapper<User> {
 
 }
 

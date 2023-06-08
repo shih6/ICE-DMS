@@ -2,7 +2,7 @@ package com.shih.icecms.shiro;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.shih.icecms.entity.Users;
+import com.shih.icecms.entity.User;
 import com.shih.icecms.service.UsersService;
 import com.shih.icecms.utils.JwtUtil;
 import org.apache.shiro.authc.AuthenticationException;
@@ -52,15 +52,15 @@ public class UserRealm extends AuthorizingRealm {
             // 解密获得username，用于和数据库进行对比
             HashMap<String,String> json= JSON.parseObject(JwtUtil.parseJWT(token).getSubject(), HashMap.class);
             String userName = json.get("userName");
-            Users users = usersService.getOne(new LambdaQueryWrapper<Users>().eq(Users::getUsername, userName));
-            if(users==null){
+            User user = usersService.getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, userName));
+            if(user ==null){
                 throw new AuthenticationException("账号不存在");
             }
             if (userName == null) {
                 throw new AuthenticationException("token错误，请重新登入！");
             }
 
-            return new SimpleAuthenticationInfo(users, users.getPassword(), getName());
+            return new SimpleAuthenticationInfo(user, user.getPassword(), getName());
         } catch (Exception e) {
             throw new AuthenticationException("token错误，请重新登入！");
         }

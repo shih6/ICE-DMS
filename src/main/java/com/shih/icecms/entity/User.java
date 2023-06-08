@@ -10,7 +10,7 @@ import java.io.Serializable;
  * @TableName users
  */
 @Data
-public class Users implements Serializable {
+public class User implements Serializable {
     /**
      * 
      */
@@ -73,7 +73,7 @@ public class Users implements Serializable {
         if (getClass() != that.getClass()) {
             return false;
         }
-        Users other = (Users) that;
+        User other = (User) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
             && (this.getUsername() == null ? other.getUsername() == null : this.getUsername().equals(other.getUsername()))
             && (this.getActualName() == null ? other.getActualName() == null : this.getActualName().equals(other.getActualName()))

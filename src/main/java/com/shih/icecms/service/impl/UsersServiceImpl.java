@@ -13,7 +13,7 @@ import com.dingtalk.api.DingTalkClient;
 import com.dingtalk.api.request.OapiUserGetbyunionidRequest;
 import com.dingtalk.api.response.OapiUserGetbyunionidResponse;
 import com.shih.icecms.config.DingTalkConfig;
-import com.shih.icecms.entity.Users;
+import com.shih.icecms.entity.User;
 import com.shih.icecms.mapper.UsersMapper;
 import com.shih.icecms.service.UsersService;
 import com.shih.icecms.utils.AccessTokenUtil;
@@ -30,7 +30,7 @@ import javax.annotation.Resource;
 */
 @Service
 @Log4j
-public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users>
+public class UsersServiceImpl extends ServiceImpl<UsersMapper, User>
     implements UsersService{
     @Resource
     DingTalkConfig dingTalkConfig;

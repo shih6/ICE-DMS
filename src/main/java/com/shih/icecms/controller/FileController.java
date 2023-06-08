@@ -1,34 +1,8 @@
 package com.shih.icecms.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.shih.icecms.config.MinioConfig;
-import com.shih.icecms.dto.ApiResult;
-import com.shih.icecms.dto.MatterDTO;
-import com.shih.icecms.entity.FileHistory;
-import com.shih.icecms.entity.Matter;
-import com.shih.icecms.entity.Users;
-import com.shih.icecms.service.FileHistoryService;
-import com.shih.icecms.service.MatterService;
-import com.shih.icecms.utils.MinioUtil;
-import io.minio.errors.MinioException;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.shiro.SecurityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
 
 @Api(tags = "文件相关接口")
 @Slf4j

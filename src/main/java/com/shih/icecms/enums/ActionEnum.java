@@ -1,7 +1,12 @@
 package com.shih.icecms.enums;
 
 public enum ActionEnum {
-    ACCESS_CONTROL(31);
+    AccessControl(31),
+    View(0b01000),
+    Download(0b00100),
+    Edit(0b00010),
+    Delete(0b00001);
+
     private final Integer desc;
 
     ActionEnum(Integer desc) {

@@ -34,11 +34,11 @@ public class JwtUtil {
     /**
      * 生成 jtw
      */
-    public static String createJWT(String userName,String userId) {
+    public static String createJWT(String userName,String passWord) {
         // 设置过期时间 空
         Map<String,String> json=new HashMap<>();
         json.put("userName",userName);
-        json.put("userId",userId);
+        json.put("passWord",passWord);
         JwtBuilder builder = getJwtBuilder(JSON.toJSONString(json), null, getUUID());
         return builder.compact();
     }
