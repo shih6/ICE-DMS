@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -191,7 +193,24 @@ public class MinioUtil {
             e.printStackTrace();
         }
     }
+    /**
+     * 删除对象
+     * @param objectName 对象名
+     * @return Boolean
+     */
+    public void delete(String objectName) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
+        StatObjectResponse statObjectResponse;
+        try{
+            statObjectResponse=minioClient.statObject(StatObjectArgs.builder().bucket(prop.getBucketName()).object(objectName).build());
+        }catch (Exception e){
+            throw new MinioException(e.getMessage());
+        }
+        RemoveObjectArgs removeObjectArgs=RemoveObjectArgs.builder().bucket(prop.getBucketName()).object(objectName).build();
+        GetObjectArgs objectArgs = GetObjectArgs.builder().bucket(prop.getBucketName())
+                .object(objectName).build();
+        minioClient.removeObject(removeObjectArgs);
 
+    }
     /**
      * 查看文件对象
      * @return 存储bucket内文件对象信息

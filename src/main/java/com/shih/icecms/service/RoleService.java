@@ -9,5 +9,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2023-06-06 22:41:31
 */
 public interface RoleService extends IService<Role> {
-
+    boolean hasRole(String roleId);
 }

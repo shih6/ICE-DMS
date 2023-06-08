@@ -8,14 +8,14 @@ import com.shih.icecms.entity.UserRoles;
 import com.shih.icecms.entity.User;
 import com.shih.icecms.enums.ActionEnum;
 import com.shih.icecms.mapper.MatterPermissionsMapper;
-import com.shih.icecms.service.MatterPermissionsService;
-import com.shih.icecms.service.MatterService;
-import com.shih.icecms.service.UserRolesService;
+import com.shih.icecms.service.*;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.AuthenticationException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Objects;
 
 /**
 * @author 1
@@ -29,8 +29,16 @@ public class MatterPermissionsServiceImpl extends ServiceImpl<MatterPermissionsM
     MatterService matterService;
     @Resource
     UserRolesService userRolesService;
+    @Resource
+    RoleService roleService;
+    @Resource
+    UsersService usersService;
 
-    public Integer getMatterPermission(String matterId,String userId) {
+    public int getMatterPermission(String matterId,String userId) {
+        // 根目录
+        if(Objects.equals(matterId, userId)){
+            return ActionEnum.AccessControl.getDesc();
+        }
         Matter matter=matterService.getById(matterId);
         if(matter.getCreator().equals(userId)){
             return ActionEnum.AccessControl.getDesc();
@@ -59,11 +67,26 @@ public class MatterPermissionsServiceImpl extends ServiceImpl<MatterPermissionsM
     }
     public boolean checkMatterPermission(String matterId, ActionEnum actionEnum){
         User user = (User)SecurityUtils.getSubject().getPrincipal();
-        Integer actionNum=getMatterPermission(matterId,user.getId());
+        int actionNum=getMatterPermission(matterId,user.getId());
         if(actionNum==ActionEnum.AccessControl.getDesc()){
             return true;
         }
-        return (actionEnum.getDesc() & actionNum) != 0;
+        if((actionEnum.getDesc() & actionNum) != 0){
+            return true;
+        }
+        log.error(String.format("权限不足，userId：[%s] 尝试获取Matter：[%s] [%s]权限",user.getId(),matterId,actionEnum.toString()));
+        throw new AuthenticationException("权限不足");
+    }
+
+    @Override
+    public boolean checkRoleExists(String roleId, int roleType) {
+        if(roleType==0){
+            return roleService.hasRole(roleId);
+        }
+        if(roleType==1){
+            return usersService.getById(roleId)!=null;
+        }
+        return false;
     }
 
 }

@@ -52,6 +52,7 @@ public class UserRealm extends AuthorizingRealm {
             // 解密获得username，用于和数据库进行对比
             HashMap<String,String> json= JSON.parseObject(JwtUtil.parseJWT(token).getSubject(), HashMap.class);
             String userName = json.get("userName");
+            String passWord = json.get("passWord");
             User user = usersService.getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, userName));
             if(user ==null){
                 throw new AuthenticationException("账号不存在");
@@ -60,7 +61,7 @@ public class UserRealm extends AuthorizingRealm {
                 throw new AuthenticationException("token错误，请重新登入！");
             }
 
-            return new SimpleAuthenticationInfo(user, user.getPassword(), getName());
+            return new SimpleAuthenticationInfo(user, passWord, getName());
         } catch (Exception e) {
             throw new AuthenticationException("token错误，请重新登入！");
         }

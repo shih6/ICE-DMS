@@ -1,28 +1,24 @@
 package com.shih.icecms.entity;
 
-import java.io.Serializable;
 import lombok.Data;
 
+import java.io.Serializable;
+import java.util.Date;
+
 /**
- * 
  * @TableName role
  */
 @Data
 public class Role implements Serializable {
-    /**
-     * 
-     */
     private Integer id;
 
-    /**
-     * 
-     */
     private String roleName;
 
-    /**
-     * 
-     */
     private String roleDesc;
+
+    private String creator;
+
+    private Date createTime;
 
     private static final long serialVersionUID = 1L;
 
@@ -40,7 +36,9 @@ public class Role implements Serializable {
         Role other = (Role) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
             && (this.getRoleName() == null ? other.getRoleName() == null : this.getRoleName().equals(other.getRoleName()))
-            && (this.getRoleDesc() == null ? other.getRoleDesc() == null : this.getRoleDesc().equals(other.getRoleDesc()));
+            && (this.getRoleDesc() == null ? other.getRoleDesc() == null : this.getRoleDesc().equals(other.getRoleDesc()))
+            && (this.getCreator() == null ? other.getCreator() == null : this.getCreator().equals(other.getCreator()))
+            && (this.getCreateTime() == null ? other.getCreateTime() == null : this.getCreateTime().equals(other.getCreateTime()));
     }
 
     @Override
@@ -50,6 +48,8 @@ public class Role implements Serializable {
         result = prime * result + ((getId() == null) ? 0 : getId().hashCode());
         result = prime * result + ((getRoleName() == null) ? 0 : getRoleName().hashCode());
         result = prime * result + ((getRoleDesc() == null) ? 0 : getRoleDesc().hashCode());
+        result = prime * result + ((getCreator() == null) ? 0 : getCreator().hashCode());
+        result = prime * result + ((getCreateTime() == null) ? 0 : getCreateTime().hashCode());
         return result;
     }
 
@@ -62,6 +62,8 @@ public class Role implements Serializable {
         sb.append(", id=").append(id);
         sb.append(", roleName=").append(roleName);
         sb.append(", roleDesc=").append(roleDesc);
+        sb.append(", creator=").append(creator);
+        sb.append(", createTime=").append(createTime);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

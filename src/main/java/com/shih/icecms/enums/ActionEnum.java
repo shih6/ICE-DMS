@@ -7,13 +7,13 @@ public enum ActionEnum {
     Edit(0b00010),
     Delete(0b00001);
 
-    private final Integer desc;
+    private final int desc;
 
-    ActionEnum(Integer desc) {
+    ActionEnum(int desc) {
         this.desc = desc;
     }
 
-    public Integer getDesc() {
+    public int getDesc() {
         return desc;
     }
 }

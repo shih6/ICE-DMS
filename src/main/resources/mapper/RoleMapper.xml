@@ -8,9 +8,12 @@
             <id property="id" column="id" jdbcType="INTEGER"/>
             <result property="roleName" column="role_name" jdbcType="VARCHAR"/>
             <result property="roleDesc" column="role_desc" jdbcType="VARCHAR"/>
+            <result property="creator" column="creator" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,role_name,role_desc
+        id,role_name,role_desc,
+        creator,create_time
     </sql>
 </mapper>

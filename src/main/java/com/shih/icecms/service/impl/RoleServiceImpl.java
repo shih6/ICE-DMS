@@ -1,5 +1,6 @@
 package com.shih.icecms.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shih.icecms.entity.Role;
 import com.shih.icecms.service.RoleService;
@@ -14,7 +15,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role>
     implements RoleService{
-
+    public boolean hasRole(String roleId){
+        return getOne(new LambdaQueryWrapper<Role>().eq(Role::getId, roleId)) != null;
+    }
 }
 
 

@@ -6,8 +6,6 @@ import com.shih.icecms.shiro.UserRealm;
 import org.apache.shiro.mgt.DefaultSessionStorageEvaluator;
 import org.apache.shiro.mgt.DefaultSubjectDAO;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
-import org.apache.shiro.spring.web.config.DefaultShiroFilterChainDefinition;
-import org.apache.shiro.spring.web.config.ShiroFilterChainDefinition;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -23,14 +21,7 @@ public class ShiroConfig {
     MyHashedCredentialsMatcher myHashedCredentialsMatcher;
 
 
-    // 配置url过滤器
-    @Bean
-    public ShiroFilterChainDefinition shiroFilterChainDefinition(){
-        DefaultShiroFilterChainDefinition shiroFilterChainDefinition = new DefaultShiroFilterChainDefinition();
-        shiroFilterChainDefinition.addPathDefinition("/user/login","anon");
-        shiroFilterChainDefinition.addPathDefinition("/shiro/**","anon");
-        return shiroFilterChainDefinition;
-    }
+
     @Bean("shiroFilter")
     public ShiroFilterFactoryBean shiroFilterFactoryBean(DefaultWebSecurityManager securityManager) {
         ShiroFilterFactoryBean factoryBean = new ShiroFilterFactoryBean();

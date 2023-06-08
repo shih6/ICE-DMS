@@ -14,6 +14,6 @@
 
     <sql id="Base_Column_List">
         id,matter_id,role_id,
-        role_type,action
+        role_type,`action`
     </sql>
 </mapper>

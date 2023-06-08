@@ -10,6 +10,8 @@ import com.shih.icecms.enums.ActionEnum;
 * @createDate 2023-06-04 20:47:35
 */
 public interface MatterPermissionsService extends IService<MatterPermissions> {
-    Integer getMatterPermission(String matterId,String userId);
+    int getMatterPermission(String matterId,String userId);
     boolean checkMatterPermission(String matterId, ActionEnum actionEnum);
+
+    boolean checkRoleExists(String roleId,int roleType);
 }
