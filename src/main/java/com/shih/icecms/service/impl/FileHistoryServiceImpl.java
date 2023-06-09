@@ -42,7 +42,7 @@ public class FileHistoryServiceImpl extends ServiceImpl<FileHistoryMapper, FileH
         for (FileHistory fileHistory : fileHistories) {
             User user = usersService.getById(fileHistory.getUserId());
             History history = new History(fileHistory.getServerVersion(), fileHistory.getDocKey()+fileHistory.getVersion(), fileHistory.getVersion(), fileHistory.getCreated().toString(), new UserDTO(user.getId(), user.getActualName()), null,null, new ArrayList<>());
-            history.setUrl("http://192.168.0.112:8080/download?fileId="+fileHistory.getMatterId()+"&fileVersion="+fileHistory.getVersion());
+            history.setUrl("http://192.168.0.112:8080/download?matterId="+fileHistory.getMatterId()+"&version="+fileHistory.getVersion());
             if(StringUtils.hasText(fileHistory.getChangesObjectName())){
                 history.setChangesUrl("http://192.168.0.112:8080/downloadByObjectName?objectName="+ UriEncoder.encode(fileHistory.getChangesObjectName()));
             }

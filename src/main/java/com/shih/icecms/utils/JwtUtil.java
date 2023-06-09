@@ -6,9 +6,10 @@ import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Jwt工具类
@@ -44,6 +45,15 @@ public class JwtUtil {
     }
     /**
      * 生成 jtw
+     */
+    public static String createJWT(Map<String, Object> payloadClaims) {
+        // 设置过期时间 空
+        JwtBuilder builder = getJwtBuilder("", null, getUUID());
+        builder.setClaims(payloadClaims);  // and write claim to the jwt
+        return builder.compact();
+    }
+    /**
+     * 生成 jtw
      *
      * @param subject token中要存放的数据（json格式）
      * @return
@@ -69,7 +79,7 @@ public class JwtUtil {
 
     private static JwtBuilder getJwtBuilder(String subject, Long ttlMillis, String uuid) {
         SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
-        SecretKey secretKey = generalKey();
+        var secretKey = generalKey();
         long nowMillis = System.currentTimeMillis();
         Date now = new Date(nowMillis);
         if (ttlMillis == null) {
@@ -110,10 +120,10 @@ public class JwtUtil {
      *
      * @return
      */
-    public static SecretKey generalKey() {
-        byte[] encodedKey = Base64.getDecoder().decode(JwtUtil.JWT_KEY);
-        SecretKey key = new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES");
-        return key;
+    public static String generalKey() {
+//        byte[] encodedKey = Base64.getDecoder().decode(JwtUtil.JWT_KEY);
+//        SecretKey key = new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES");
+        return JWT_KEY;
     }
 
     /**
@@ -124,7 +134,7 @@ public class JwtUtil {
      * @throws Exception
      */
     public static Claims parseJWT(String jwt) throws Exception {
-        SecretKey secretKey = generalKey();
+        var secretKey = generalKey();
         return Jwts.parser()
                 .setSigningKey(secretKey)
                 .parseClaimsJws(jwt)

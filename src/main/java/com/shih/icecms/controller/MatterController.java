@@ -3,6 +3,7 @@ package com.shih.icecms.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shih.icecms.dto.ApiResult;
+import com.shih.icecms.dto.MatterDTO;
 import com.shih.icecms.entity.FileHistory;
 import com.shih.icecms.entity.Matter;
 import com.shih.icecms.entity.User;
@@ -83,17 +84,20 @@ public class MatterController {
     @GetMapping("/matter/list")
     @ApiOperation(value = "获取文件列表")
     public ApiResult list(
-            @ApiParam(value = "文件夹id",defaultValue = "root",example = "root") @RequestParam String matterId,
+            @ApiParam(value = "文件夹id",defaultValue = "root",example = "root") @RequestParam(required = false) String matterId,
             @ApiParam(value = "页数",defaultValue = "1",example = "1") @RequestParam(required = false,defaultValue = "1") int pageNum,
             @ApiParam(value = "单页大小",defaultValue = "100",example = "100") @RequestParam(required = false,defaultValue = "100") int pageSize){
         User user =shiroUtil.getLoginUser();
+        if(matterId==null){
+            matterId=user.getId();
+        }
         if(!matterId.equals(user.getId())){
             if(matterService.getById(matterId)==null){
                 return ApiResult.ERROR("文件不存在");
             }
         }
         matterPermissionsService.checkMatterPermission(matterId, ActionEnum.View);
-        Page<Matter> page = matterService.page(Page.of(pageNum, pageSize), new LambdaQueryWrapper<Matter>().eq(Matter::getParentId, matterId));
+        Page<MatterDTO> page = matterService.listByPage(matterId, user.getId(), pageNum,pageSize);
         return ApiResult.SUCCESS(page);
     }
 

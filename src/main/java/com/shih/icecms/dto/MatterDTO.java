@@ -8,6 +8,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MatterDTO {
+    private String id;
+    private String parentId;
     private String name;
-    private String parent_id;
+    private Integer type;
+    private Long createTime;
+    private Long modifiedTime;
+    private String creator;
+    private Integer status;
+    // 新增字段
+    private Integer size;
+    private Integer action;
+    private String creatorName;
 }

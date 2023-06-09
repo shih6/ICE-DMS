@@ -1,7 +1,9 @@
 package com.shih.icecms.mapper;
 
-import com.shih.icecms.entity.Matter;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.shih.icecms.dto.MatterDTO;
+import com.shih.icecms.entity.Matter;
 
 /**
 * @author 1
@@ -10,7 +12,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.shih.icecms.entity.Matter
 */
 public interface MatterMapper extends BaseMapper<Matter> {
-
+    Page<MatterDTO> listByPage(Page<MatterDTO> page, String matterId, String userId, int fullAction);
 }
 
 

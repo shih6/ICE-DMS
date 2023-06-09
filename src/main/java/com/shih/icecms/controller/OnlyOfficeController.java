@@ -45,13 +45,13 @@ public class OnlyOfficeController {
 
     @GetMapping("/getDocumentConfig")
     @ApiOperation(value = "获取config")
-    public ResponseEntity GetDocumentConfig(@RequestParam String matterId){
+    public ResponseEntity GetDocumentConfig(@RequestParam String matterId,@RequestParam(required = false) String currentVersion){
         Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId,matterId).eq(Matter::getType,1));
         if(matter !=null){
             FileHistory fileHistory=fileHistoryService.getOne(new LambdaQueryWrapper<FileHistory>().eq(FileHistory::getMatterId,matterId).orderBy(true,false,FileHistory::getCreated).last("limit 1"));
             DocumentConfig documentConfig=new DocumentConfig();
             documentConfig.setTitle(matter.getName());
-            documentConfig.setUrl("http://192.168.0.112:8080/download?fileId="+ matter.getId()+"&fileVersion="+ fileHistory.getVersion()+"&fileType="+ matter.getType());
+            documentConfig.setUrl("http://192.168.0.112:8080/download?matterId="+ matter.getId()+"&version="+ fileHistory.getVersion());
             documentConfig.setHistories(fileHistoryService.GetOnlyOfficeHistoryByFileId(matterId));
             documentConfig.setKey(fileHistory.getDocKey());
             return ResponseEntity.ok().body(documentConfig);
