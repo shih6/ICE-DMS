@@ -110,7 +110,7 @@ public class MatterController {
             matterId = user.getId();
         }
         // 能否对改文件夹内容进行修改
-        matterPermissionsService.checkMatterPermission(matterId, ActionEnum.Edit);
+        matterPermissionsService.checkMatterPermission(StringUtils.hasText(matterId)?matterId: user.getId(), ActionEnum.Edit);
         FileHistory newHistory=new FileHistory();
         Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getParentId, matterId).eq(Matter::getType,1).eq(Matter::getName,multipartFile.getOriginalFilename()));
         if(matter !=null){
@@ -164,6 +164,7 @@ public class MatterController {
         minioUtil.download(fileHistory.getObjectName(),res, matter.getName());
         return ApiResult.SUCCESS();
     }
+
     @ApiOperation(value = "文件删除")
     @DeleteMapping("/matter/delete")
     public ApiResult delete(@RequestParam String matterId)   {

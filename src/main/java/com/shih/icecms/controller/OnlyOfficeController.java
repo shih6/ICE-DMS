@@ -2,6 +2,7 @@ package com.shih.icecms.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.shih.icecms.config.MinioConfig;
+import com.shih.icecms.dto.ApiResult;
 import com.shih.icecms.dto.ChangesHistory;
 import com.shih.icecms.dto.DocumentConfig;
 import com.shih.icecms.dto.Track;
@@ -13,6 +14,7 @@ import com.shih.icecms.service.FileHistoryService;
 import com.shih.icecms.service.MatterService;
 import com.shih.icecms.utils.CommonUtil;
 import com.shih.icecms.utils.MinioUtil;
+import io.minio.errors.MinioException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
@@ -51,7 +55,7 @@ public class OnlyOfficeController {
             FileHistory fileHistory=fileHistoryService.getOne(new LambdaQueryWrapper<FileHistory>().eq(FileHistory::getMatterId,matterId).orderBy(true,false,FileHistory::getCreated).last("limit 1"));
             DocumentConfig documentConfig=new DocumentConfig();
             documentConfig.setTitle(matter.getName());
-            documentConfig.setUrl("http://192.168.0.112:8080/download?matterId="+ matter.getId()+"&version="+ fileHistory.getVersion());
+            documentConfig.setUrl("http://192.168.0.112:8080/onlyoffice/matter/downloadForOnlyOffice?matterId="+ matter.getId()+"&version="+ fileHistory.getVersion());
             documentConfig.setHistories(fileHistoryService.GetOnlyOfficeHistoryByFileId(matterId));
             documentConfig.setKey(fileHistory.getDocKey());
             return ResponseEntity.ok().body(documentConfig);
@@ -105,5 +109,22 @@ public class OnlyOfficeController {
         }
 
         return ResponseEntity.ok().body("{\"error\":0}");
+    }
+
+    @ApiOperation(value = "文件下载")
+    @GetMapping("/matter/downloadForOnlyOffice")
+    public ApiResult downloadForOnlyOffice(@RequestParam String matterId, @RequestParam(required = false) String version, HttpServletResponse res) throws MinioException, IOException {
+        Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId, matterId).eq(Matter::getType,1));
+        FileHistory fileHistory=fileHistoryService.getOne(new LambdaQueryWrapper<FileHistory>().
+                eq(version!=null,FileHistory::getVersion,version).
+                eq(FileHistory::getMatterId,matter.getId()).
+                orderBy(version==null,false,FileHistory::getCreated).
+                last("limit 1"));
+        if(fileHistory==null){
+            return ApiResult.ERROR("version not exists");
+        }
+        res.setHeader("Version",fileHistory.getVersion().toString());
+        minioUtil.download(fileHistory.getObjectName(),res, matter.getName());
+        return ApiResult.SUCCESS();
     }
 }
