@@ -15,7 +15,6 @@ import com.shih.icecms.service.MatterService;
 import com.shih.icecms.service.UsersService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.yaml.snakeyaml.util.UriEncoder;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -42,9 +41,9 @@ public class FileHistoryServiceImpl extends ServiceImpl<FileHistoryMapper, FileH
         for (FileHistory fileHistory : fileHistories) {
             User user = usersService.getById(fileHistory.getUserId());
             History history = new History(fileHistory.getServerVersion(), fileHistory.getDocKey()+fileHistory.getVersion(), fileHistory.getVersion(), fileHistory.getCreated().toString(), new UserDTO(user.getId(), user.getActualName()), null,null, new ArrayList<>());
-            history.setUrl("http://192.168.0.112:8080/onlyoffice/matter/downloadForOnlyOffice?matterId="+fileHistory.getMatterId()+"&version="+fileHistory.getVersion());
+            history.setUrl("http://192.168.0.112:8080/onlyoffice/downloadForOnlyOffice?matterId="+fileHistory.getMatterId()+"&version="+fileHistory.getVersion());
             if(StringUtils.hasText(fileHistory.getChangesObjectName())){
-                history.setChangesUrl("http://192.168.0.112:8080/downloadByObjectName?objectName="+ UriEncoder.encode(fileHistory.getChangesObjectName()));
+                history.setChangesUrl("http://192.168.0.112:8080/onlyoffice/downloadChanges?matterId="+ fileHistory.getMatterId()+"&version="+fileHistory.getVersion());
             }
             for (FileChanges changes : fileChangesService.list(new LambdaQueryWrapper<FileChanges>().eq(FileChanges::getFileHistoryId, fileHistory.getId()))) {
                 user = usersService.getById(changes.getUserId());

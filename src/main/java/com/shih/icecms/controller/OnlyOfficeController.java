@@ -55,7 +55,7 @@ public class OnlyOfficeController {
             FileHistory fileHistory=fileHistoryService.getOne(new LambdaQueryWrapper<FileHistory>().eq(FileHistory::getMatterId,matterId).orderBy(true,false,FileHistory::getCreated).last("limit 1"));
             DocumentConfig documentConfig=new DocumentConfig();
             documentConfig.setTitle(matter.getName());
-            documentConfig.setUrl("http://192.168.0.112:8080/onlyoffice/matter/downloadForOnlyOffice?matterId="+ matter.getId()+"&version="+ fileHistory.getVersion());
+            documentConfig.setUrl("http://192.168.0.112:8080/onlyoffice/downloadForOnlyOffice?matterId="+ matter.getId()+"&version="+ fileHistory.getVersion());
             documentConfig.setHistories(fileHistoryService.GetOnlyOfficeHistoryByFileId(matterId));
             documentConfig.setKey(fileHistory.getDocKey());
             return ResponseEntity.ok().body(documentConfig);
@@ -66,6 +66,7 @@ public class OnlyOfficeController {
     @PostMapping("/callback")
     @ApiOperation(value = "onlyoffice回调")
     public ResponseEntity OnlyOfficeCallBack(@RequestBody Track track) throws MalformedURLException {
+        log.info(track.getStatus().toString());
         log.info(track.toString());
         if(track.getStatus()==2||track.getStatus()==3){
             if(StringUtils.hasText(track.getKey())){
@@ -80,9 +81,10 @@ public class OnlyOfficeController {
 
                 // 保存文档内容
                 FileHistory newHistory=new FileHistory();
-                //TODO
                 newHistory.setCreated(new Date());
-                newHistory.setUserId("test");
+                if(track.getUsers()!=null&&track.getUsers().size()>0){
+                    newHistory.setUserId(track.getUsers().get(0));
+                }
                 newHistory.setMatterId(matter.getId());
                 newHistory.setDocKey(UUID.randomUUID().toString());
                 newHistory.setVersion(version+1);
@@ -90,7 +92,7 @@ public class OnlyOfficeController {
                         CommonUtil.getFilenameExtensionWithDot(matter.getName()));
                 newHistory.setServerVersion(track.getHistory().getServerVersion());
                 // 保存changes.zip
-                String objectName=newHistory.getObjectName()+"/"+version+".zip";
+                String objectName=newHistory.getObjectName()+"changes.zip";
                 minioUtil.upload(new URL(track.getChangesurl()), objectName);
                 newHistory.setChangesObjectName(objectName);
 
@@ -112,7 +114,7 @@ public class OnlyOfficeController {
     }
 
     @ApiOperation(value = "文件下载")
-    @GetMapping("/matter/downloadForOnlyOffice")
+    @GetMapping("/downloadForOnlyOffice")
     public ApiResult downloadForOnlyOffice(@RequestParam String matterId, @RequestParam(required = false) String version, HttpServletResponse res) throws MinioException, IOException {
         Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId, matterId).eq(Matter::getType,1));
         FileHistory fileHistory=fileHistoryService.getOne(new LambdaQueryWrapper<FileHistory>().
@@ -125,6 +127,20 @@ public class OnlyOfficeController {
         }
         res.setHeader("Version",fileHistory.getVersion().toString());
         minioUtil.download(fileHistory.getObjectName(),res, matter.getName());
+        return ApiResult.SUCCESS();
+    }
+    @ApiOperation(value = "changes文件下载")
+    @GetMapping("/downloadChanges")
+    public ApiResult downloadChanges(@RequestParam String matterId, @RequestParam String version, HttpServletResponse res) throws MinioException, IOException {
+        FileHistory fileHistory=fileHistoryService.getOne(new LambdaQueryWrapper<FileHistory>().
+                eq(version!=null,FileHistory::getVersion,version).
+                eq(FileHistory::getMatterId,matterId).
+                last("limit 1"));
+        if(fileHistory==null){
+            return ApiResult.ERROR("version not exists");
+        }
+        res.setHeader("Version",fileHistory.getVersion().toString());
+        minioUtil.download(fileHistory.getChangesObjectName(),res, fileHistory.getChangesObjectName());
         return ApiResult.SUCCESS();
     }
 }

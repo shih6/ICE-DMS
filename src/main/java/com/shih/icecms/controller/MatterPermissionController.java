@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @Slf4j
-public class MatterPermissionController {
+public class  MatterPermissionController {
     @Resource
     private HttpServletRequest httpServletRequest;
     @Autowired

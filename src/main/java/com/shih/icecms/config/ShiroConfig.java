@@ -19,9 +19,6 @@ import java.util.Map;
 public class ShiroConfig {
     @Autowired
     MyHashedCredentialsMatcher myHashedCredentialsMatcher;
-
-
-
     @Bean("shiroFilter")
     public ShiroFilterFactoryBean shiroFilterFactoryBean(DefaultWebSecurityManager securityManager) {
         ShiroFilterFactoryBean factoryBean = new ShiroFilterFactoryBean();
@@ -42,10 +39,12 @@ public class ShiroConfig {
         filterRuleMap.put("/**", "jwt");
         // 访问401和404页面不通过我们的Filter
         //开放API文档接口
+        filterRuleMap.put("/onlyoffice/**","anon");
         filterRuleMap.put("/swagger-ui.html", "anon");
         filterRuleMap.put("/webjars/**","anon");
         filterRuleMap.put("/swagger-resources/**","anon");
         filterRuleMap.put("/v2/**","anon");
+        filterRuleMap.put("/static/**","anon");
         //sql监控
         filterRuleMap.put("/druid/**","anon");
         factoryBean.setFilterChainDefinitionMap(filterRuleMap);

@@ -11,9 +11,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -62,5 +60,10 @@ public class UserController {
         List<User> userList =usersService.list(new QueryWrapper<User>().lambda().eq(User::getStatus,1));
         return ApiResult.SUCCESS(userList);
     }
-
+    @ApiOperation("账号状态修改")
+    @PostMapping("/user/status")
+    public ApiResult<User> userStatus(@RequestBody User userDto){
+        usersService.updateById(userDto);
+        return ApiResult.SUCCESS(userDto);
+    }
 }
