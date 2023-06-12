@@ -45,7 +45,7 @@ public class MyHashedCredentialsMatcher extends HashedCredentialsMatcher {
         String passWord = json.get("passWord");
         String key = KEY_PREFIX + userName;
         // 获取用户登录失败次数
-        RedisAtomicInteger atomicInteger=atomicInteger= new RedisAtomicInteger (key,redisTemplate.getConnectionFactory(),0);
+        RedisAtomicInteger atomicInteger=atomicInteger= new RedisAtomicInteger (key,redisTemplate.getConnectionFactory());
         User user = (User) info.getPrincipals().getPrimaryPrincipal();
         atomicInteger.expire(5, TimeUnit.MINUTES);
         if (atomicInteger.incrementAndGet() > MAX){

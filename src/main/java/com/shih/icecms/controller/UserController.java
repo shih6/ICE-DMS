@@ -1,5 +1,6 @@
 package com.shih.icecms.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.shih.icecms.dto.ApiResult;
 import com.shih.icecms.entity.User;
@@ -11,6 +12,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -55,15 +57,34 @@ public class UserController {
     }
     @ApiOperation("获取用户列表")
     @GetMapping("/user/list")
-    public ApiResult<List<User>> list(){
+    public ApiResult<List<User>> list(@RequestParam(required = false,defaultValue = "1") String status){
         User user =shiroUtil.getLoginUser();
-        List<User> userList =usersService.list(new QueryWrapper<User>().lambda().eq(User::getStatus,1));
+        List<User> userList =usersService.list(new QueryWrapper<User>().lambda().eq(!status.equals("-1"),User::getStatus,status));
         return ApiResult.SUCCESS(userList);
     }
     @ApiOperation("账号状态修改")
     @PostMapping("/user/status")
     public ApiResult<User> userStatus(@RequestBody User userDto){
         usersService.updateById(userDto);
+        return ApiResult.SUCCESS(userDto);
+    }
+    @ApiOperation("创建账号")
+    @PostMapping("/user/add")
+    public ApiResult userAdd(@RequestBody User userDto){
+        if(!StringUtils.hasText(userDto.getUsername())){
+            return ApiResult.ERROR("用户名不能为空");
+        }
+        if(!StringUtils.hasText(userDto.getActualName())){
+            return ApiResult.ERROR("姓名不能为空");
+        }
+        if(!StringUtils.hasText(userDto.getPassword())){
+            return ApiResult.ERROR("密码不能为空");
+        }
+
+        if(usersService.count(new LambdaQueryWrapper<User>().eq(User::getUsername,userDto.getUsername()))>0){
+            return ApiResult.ERROR("用户名不能重复");
+        }
+        usersService.save(userDto);
         return ApiResult.SUCCESS(userDto);
     }
 }
