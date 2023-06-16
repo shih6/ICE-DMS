@@ -52,7 +52,7 @@ public class MatterController {
     @PutMapping("/matter/addFolder")
     public ApiResult addFolder(@RequestParam(required = false) String parentId,@RequestParam String name){
         User user =shiroUtil.getLoginUser();
-        if(parentId==null){
+        if(parentId==null||parentId.equals(user.getId())){
             parentId=user.getId();
         }else{
             if(matterService.getById(parentId)==null){
@@ -202,5 +202,13 @@ public class MatterController {
             return ApiResult.ERROR("文件不存在");
         }
         return ApiResult.SUCCESS();
+    }
+    @ApiOperation(value = "请求历史版本列表")
+    @GetMapping("/matter/version")
+    public ApiResult<List<FileHistory>> matterVersion(@RequestParam String matterId){
+        matterPermissionsService.checkMatterPermission(matterId, ActionEnum.View);
+        Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId, matterId));
+        List<FileHistory> fileHistories = fileHistoryService.list(new LambdaQueryWrapper<FileHistory>().eq(FileHistory::getMatterId, matterId));
+        return ApiResult.SUCCESS(fileHistories);
     }
 }

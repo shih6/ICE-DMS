@@ -5,23 +5,32 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.shih.icecms.dto.ApiResult;
 import com.shih.icecms.entity.User;
 import com.shih.icecms.service.UsersService;
+import com.shih.icecms.utils.CommonUtil;
 import com.shih.icecms.utils.JwtUtil;
+import com.shih.icecms.utils.MinioUtil;
 import com.shih.icecms.utils.ShiroUtil;
+import io.minio.errors.MinioException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 @RestController
 @Api(value = "登录",tags = {"登录"})
+@Slf4j
 public class UserController {
     @Resource
     HttpServletRequest request;
@@ -31,6 +40,8 @@ public class UserController {
     UsersService usersService;
     @Autowired
     private ShiroUtil shiroUtil;
+    @Resource
+    private MinioUtil minioUtil;
 
     @ApiOperation("账号密码登录")
     @GetMapping(value = "/user/login")
@@ -86,5 +97,29 @@ public class UserController {
         }
         usersService.save(userDto);
         return ApiResult.SUCCESS(userDto);
+    }
+    @ApiOperation("上传头像")
+    @PostMapping("/avatar/upload")
+    public ApiResult uploadAvatar(@RequestParam(value = "file") MultipartFile multipartFile){
+        User user=shiroUtil.getLoginUser();
+        if(org.apache.shiro.util.StringUtils.hasText(user.getAvatar())){
+            try {
+                minioUtil.delete(user.getAvatar());
+            } catch (MinioException | RuntimeException | IOException | NoSuchAlgorithmException | InvalidKeyException e) {
+                log.error(e.getMessage());
+            }
+        }
+        String prefix="avatar/";
+        String objectName=user.getId()+ CommonUtil.getFilenameExtensionWithDot(multipartFile.getOriginalFilename());
+        minioUtil.upload(multipartFile, prefix+objectName);
+        user.setAvatar(objectName);
+        usersService.updateById(user);
+        return ApiResult.SUCCESS(objectName);
+    }
+    @ApiOperation("下载头像")
+    @GetMapping("/avatar/{objectName}")
+    public void downloadAvatar(@PathVariable("objectName") String objectName) throws MinioException, IOException {
+        String prefix="avatar/";
+        minioUtil.download(prefix+objectName, response);
     }
 }

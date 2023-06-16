@@ -5,7 +5,7 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3307/ice-cms?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8
-    username: root
+    username: admin
     password: p@ssw0rd
     type: com.alibaba.druid.pool.DruidDataSource #Druid类型
     druid:
@@ -41,7 +41,7 @@ logging:
 #  file:
 #    path: e:/wwwroot/log1  #日志保存路径
 minio:
-  endpoint: http://192.168.0.112:9000 #Minio服务所在地址
+  endpoint: ${setting.minioServerHost} #Minio服务所在地址
   bucketName: tulaoda #存储桶名称
   accessKey: WHuOnmrpKpH1xuZ6 #访问的key
   secretKey: iKLKkPdVAPVcNanYv2c60wbnxT4LP5Co #访问的秘钥
@@ -49,6 +49,14 @@ shiro:
   web:
     enabled: true
   enabled: true
+
+
+setting:
+  documentServer:
+    host: http://127.0.0.1:9080
+    fileStorageServerHost: http://172.27.240.1:8080
+  minioServerHost: http://127.0.0.1:9000
+  serverHost: http://host.docker.internal:8080
 
 dingtalk:
   AgentId: 1929550759

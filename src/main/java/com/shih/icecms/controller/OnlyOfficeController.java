@@ -19,6 +19,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -46,6 +47,11 @@ public class OnlyOfficeController {
     private FileChangesService fileChangesService;
     @Resource
     MatterService matterService;
+    @Value("${setting.minioServerHost}")
+    private String minioServerHost;
+    @Value("${setting.documentServer.fileStorageServerHost}")
+    private String fileStorageServerHost;
+
 
     @GetMapping("/getDocumentConfig")
     @ApiOperation(value = "获取config")
@@ -55,7 +61,7 @@ public class OnlyOfficeController {
             FileHistory fileHistory=fileHistoryService.getOne(new LambdaQueryWrapper<FileHistory>().eq(FileHistory::getMatterId,matterId).orderBy(true,false,FileHistory::getCreated).last("limit 1"));
             DocumentConfig documentConfig=new DocumentConfig();
             documentConfig.setTitle(matter.getName());
-            documentConfig.setUrl("http://192.168.0.112:8080/onlyoffice/downloadForOnlyOffice?matterId="+ matter.getId()+"&version="+ fileHistory.getVersion());
+            documentConfig.setUrl(fileStorageServerHost +"/onlyoffice/downloadForOnlyOffice?matterId="+ matter.getId()+"&version="+ fileHistory.getVersion());
             documentConfig.setHistories(fileHistoryService.GetOnlyOfficeHistoryByFileId(matterId));
             documentConfig.setKey(fileHistory.getDocKey());
             return ResponseEntity.ok().body(documentConfig);

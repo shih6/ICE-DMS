@@ -45,6 +45,10 @@ public class ShiroConfig {
         filterRuleMap.put("/swagger-resources/**","anon");
         filterRuleMap.put("/v2/**","anon");
         filterRuleMap.put("/static/**","anon");
+
+
+        filterRuleMap.put("/avatar/upload","jwt");
+        filterRuleMap.put("/avatar/**","anon");
         //sql监控
         filterRuleMap.put("/druid/**","anon");
         factoryBean.setFilterChainDefinitionMap(filterRuleMap);

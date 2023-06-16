@@ -13,6 +13,7 @@ import com.shih.icecms.service.FileChangesService;
 import com.shih.icecms.service.FileHistoryService;
 import com.shih.icecms.service.MatterService;
 import com.shih.icecms.service.UsersService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -34,16 +35,17 @@ public class FileHistoryServiceImpl extends ServiceImpl<FileHistoryMapper, FileH
     private FileChangesService fileChangesService;
     @Resource
     private MatterService matterService;
-
+    @Value("${setting.documentServer.fileStorageServerHost}")
+    private String fileStorageServerHost;
     public List<History> GetOnlyOfficeHistoryByFileId(String fileId) {
         List<FileHistory> fileHistories = list(new LambdaQueryWrapper<FileHistory>().eq(FileHistory::getMatterId, fileId).orderBy(true,false,FileHistory::getCreated));
         List<History> histories = new ArrayList<>();
         for (FileHistory fileHistory : fileHistories) {
             User user = usersService.getById(fileHistory.getUserId());
             History history = new History(fileHistory.getServerVersion(), fileHistory.getDocKey()+fileHistory.getVersion(), fileHistory.getVersion(), fileHistory.getCreated().toString(), new UserDTO(user.getId(), user.getActualName()), null,null, new ArrayList<>());
-            history.setUrl("http://192.168.0.112:8080/onlyoffice/downloadForOnlyOffice?matterId="+fileHistory.getMatterId()+"&version="+fileHistory.getVersion());
+            history.setUrl(fileStorageServerHost +"/onlyoffice/downloadForOnlyOffice?matterId="+fileHistory.getMatterId()+"&version="+fileHistory.getVersion());
             if(StringUtils.hasText(fileHistory.getChangesObjectName())){
-                history.setChangesUrl("http://192.168.0.112:8080/onlyoffice/downloadChanges?matterId="+ fileHistory.getMatterId()+"&version="+fileHistory.getVersion());
+                history.setChangesUrl(fileStorageServerHost +"/onlyoffice/downloadChanges?matterId="+ fileHistory.getMatterId()+"&version="+fileHistory.getVersion());
             }
             for (FileChanges changes : fileChangesService.list(new LambdaQueryWrapper<FileChanges>().eq(FileChanges::getFileHistoryId, fileHistory.getId()))) {
                 user = usersService.getById(changes.getUserId());
