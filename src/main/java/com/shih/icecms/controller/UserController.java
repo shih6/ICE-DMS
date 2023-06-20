@@ -3,7 +3,10 @@ package com.shih.icecms.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.shih.icecms.dto.ApiResult;
+import com.shih.icecms.dto.MatterDTO;
+import com.shih.icecms.entity.Matter;
 import com.shih.icecms.entity.User;
+import com.shih.icecms.service.MatterService;
 import com.shih.icecms.service.UsersService;
 import com.shih.icecms.utils.CommonUtil;
 import com.shih.icecms.utils.JwtUtil;
@@ -16,6 +19,8 @@ import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -42,6 +48,8 @@ public class UserController {
     private ShiroUtil shiroUtil;
     @Resource
     private MinioUtil minioUtil;
+    @Resource
+    private MatterService matterService;
 
     @ApiOperation("账号密码登录")
     @GetMapping(value = "/user/login")
@@ -51,7 +59,7 @@ public class UserController {
             response.setHeader("Authorization", JwtUtil.createJWT(user.getUsername(),passWord));
             return ApiResult.SUCCESS(user);
         }else{
-            return ApiResult.ERROR("账号密码错误");
+            return ApiResult.ERROR("账号或密码错误");
         }
     }
 
@@ -68,9 +76,9 @@ public class UserController {
     }
     @ApiOperation("获取用户列表")
     @GetMapping("/user/list")
-    public ApiResult<List<User>> list(@RequestParam(required = false,defaultValue = "1") String status){
+    public ApiResult<List<User>> list(@RequestParam(required = false,defaultValue = "1") Integer status){
         User user =shiroUtil.getLoginUser();
-        List<User> userList =usersService.list(new QueryWrapper<User>().lambda().eq(!status.equals("-1"),User::getStatus,status));
+        List<User> userList =usersService.list(new QueryWrapper<User>().lambda().eq(status!=-1,User::getStatus,status));
         return ApiResult.SUCCESS(userList);
     }
     @ApiOperation("账号状态修改")
@@ -96,6 +104,16 @@ public class UserController {
             return ApiResult.ERROR("用户名不能重复");
         }
         usersService.save(userDto);
+        Matter matter=new Matter();
+        matter.setId(userDto.getId());
+        matter.setCreator(userDto.getId());
+        matter.setType(0);
+        matter.setName(matter.getId());
+        matter.setParentId("root");
+        matter.setCreateTime(new Date().getTime());
+        matter.setStatus(1);
+        matter.setModifiedTime(new Date().getTime());
+        matterService.save(matter);
         return ApiResult.SUCCESS(userDto);
     }
     @ApiOperation("上传头像")
