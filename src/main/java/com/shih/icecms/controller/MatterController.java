@@ -11,6 +11,7 @@ import com.shih.icecms.enums.ActionEnum;
 import com.shih.icecms.service.FileHistoryService;
 import com.shih.icecms.service.MatterPermissionsService;
 import com.shih.icecms.service.MatterService;
+import com.shih.icecms.service.UsersService;
 import com.shih.icecms.utils.CommonUtil;
 import com.shih.icecms.utils.MinioUtil;
 import com.shih.icecms.utils.ShiroUtil;
@@ -48,6 +49,8 @@ public class MatterController {
     private ShiroUtil shiroUtil;
     @Autowired
     private MatterPermissionsService matterPermissionsService;
+    @Resource
+    private UsersService usersService;
     @ApiOperation(value = "创建文件夹")
     @PutMapping("/matter/addFolder")
     public ApiResult addFolder(@RequestParam(required = false) String parentId,@RequestParam String name){
@@ -97,8 +100,10 @@ public class MatterController {
             }
         }
         matterPermissionsService.checkMatterPermission(matterId, ActionEnum.View);
+        MatterDTO parentMatter=matterService.getMatterDtoById(matterId, user.getId());
         Page<MatterDTO> page = matterService.listByPage(matterId, user.getId(), pageNum,pageSize);
-        return ApiResult.SUCCESS(page);
+        parentMatter.setSubMatters(page);
+        return ApiResult.SUCCESS(parentMatter);
     }
 
 //    @Transactional

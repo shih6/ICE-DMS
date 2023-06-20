@@ -13,6 +13,7 @@ import com.shih.icecms.entity.Matter;
 */
 public interface MatterMapper extends BaseMapper<Matter> {
     Page<MatterDTO> listByPage(Page<MatterDTO> page, String matterId, String userId, int fullAction);
+    MatterDTO getMatterDtoById(String matterId,String userId, int fullAction);
 }
 
 

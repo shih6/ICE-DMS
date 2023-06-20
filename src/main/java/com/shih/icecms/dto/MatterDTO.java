@@ -1,5 +1,6 @@
 package com.shih.icecms.dto;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,4 +21,5 @@ public class MatterDTO {
     private Integer size;
     private Integer action;
     private String creatorName;
+    private Page<MatterDTO> subMatters;
 }

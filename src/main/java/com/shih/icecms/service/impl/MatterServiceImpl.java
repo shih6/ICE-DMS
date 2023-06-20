@@ -19,6 +19,11 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
     public Page<MatterDTO> listByPage(String matterId, String userId, int pageNum, int pageSize){
         return baseMapper.listByPage(Page.of(pageNum,pageSize),matterId, userId, 31);
     }
+
+    @Override
+    public MatterDTO getMatterDtoById(String matterId, String userId) {
+        return baseMapper.getMatterDtoById(matterId, userId, 31);
+    }
 }
 
 

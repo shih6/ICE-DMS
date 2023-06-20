@@ -21,22 +21,38 @@
         creator,status
     </sql>
 <!--    case when中的结果似乎无法在where中使用 套一个查询 TODO 分页无效-->
+    <select id="getMatterDtoById" resultType="com.shih.icecms.dto.MatterDTO">
+        SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,
+               u.actual_name as creator_name,
+               CASE WHEN m.creator=#{userId} THEN #{fullAction} ELSE mp.action END AS `action`
+        FROM matter m
+                 left JOIN matter_permissions mp ON m.id = mp.matter_id
+                 LEFT JOIN user_roles ur ON mp.role_id = ur.role_id AND ur.user_id = #{userId} AND mp.role_type = 0
+                 LEFT JOIN `user` u on u.id=m.creator
+        WHERE
+          -- user权限
+            ((mp.role_id = #{userId} AND mp.role_type = 1 )
+                -- role权限
+                OR (mp.role_type = 0 AND ur.user_id = #{userId} )
+                -- creator权限
+                OR m.creator=#{userId}) and m.id=#{matterId}
+    </select>
     <select id="listByPage" resultType="com.shih.icecms.dto.MatterDTO">
-    select * from(
-         SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,
-                u.actual_name as creator_name,
-                CASE WHEN m.creator=#{userId} THEN #{fullAction} ELSE mp.action END AS `action`
-         FROM matter m
-                  left JOIN matter_permissions mp ON m.id = mp.matter_id
-                  LEFT JOIN user_roles ur ON mp.role_id = ur.role_id AND ur.user_id = #{userId} AND mp.role_type = 0
-                  LEFT JOIN `user` u on u.id=m.creator
-         WHERE
-        -- user权限
-        ((mp.role_id = #{userId} AND mp.role_type = 1 )
-        -- role权限
-        OR (mp.role_type = 0 AND ur.user_id = #{userId} )
-        -- creator权限
-        OR m.creator=#{userId}) and m.parent_id=#{matterId}
-     ) a where a.action>0
+        select * from(
+                         SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,
+                                u.actual_name as creator_name,
+                                CASE WHEN m.creator=#{userId} THEN #{fullAction} ELSE mp.action END AS `action`
+                         FROM matter m
+                                  left JOIN matter_permissions mp ON m.id = mp.matter_id
+                                  LEFT JOIN user_roles ur ON mp.role_id = ur.role_id AND ur.user_id = #{userId} AND mp.role_type = 0
+                                  LEFT JOIN `user` u on u.id=m.creator
+                         WHERE
+                           -- user权限
+                             ((mp.role_id = #{userId} AND mp.role_type = 1 )
+                                 -- role权限
+                                 OR (mp.role_type = 0 AND ur.user_id = #{userId} )
+                                 -- creator权限
+                                 OR m.creator=#{userId}) and m.parent_id=#{matterId}
+                     ) a where a.action>0
     </select>
 </mapper>

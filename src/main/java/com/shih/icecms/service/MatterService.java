@@ -12,4 +12,5 @@ import com.shih.icecms.entity.Matter;
 */
 public interface MatterService extends IService<Matter> {
     Page<MatterDTO> listByPage(String matterId, String userId, int pageNum, int pageSize);
+    MatterDTO getMatterDtoById(String matterId,String userId);
 }
