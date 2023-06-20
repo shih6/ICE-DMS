@@ -5,7 +5,7 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3307/ice-cms?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8
-    username: admin
+    username: root
     password: p@ssw0rd
     type: com.alibaba.druid.pool.DruidDataSource #Druid类型
     druid:
@@ -54,7 +54,7 @@ shiro:
 setting:
   documentServer:
     host: http://127.0.0.1:9080
-    fileStorageServerHost: http://172.27.240.1:8080
+    fileStorageServerHost: http://172.22.240.1:8080
   minioServerHost: http://127.0.0.1:9000
   serverHost: http://host.docker.internal:8080
 
