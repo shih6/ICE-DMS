@@ -2,6 +2,7 @@ package com.shih.icecms.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shih.icecms.dto.ApiResult;
 import com.shih.icecms.entity.Matter;
 import com.shih.icecms.entity.MatterPermissions;
 import com.shih.icecms.entity.UserRoles;
@@ -14,6 +15,7 @@ import org.apache.shiro.authc.AuthenticationException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -67,6 +69,17 @@ public class MatterPermissionsServiceImpl extends ServiceImpl<MatterPermissionsM
     }
     public boolean checkMatterPermission(String matterId, ActionEnum actionEnum){
         User user = (User)SecurityUtils.getSubject().getPrincipal();
+        if(actionEnum.getDesc()==ActionEnum.Delete.getDesc()){
+            switch (matterId){
+                case "root":
+                case "public":
+                case "private":
+                    return false;
+            }
+            if(user.getId().equals(matterId)){
+                return false;
+            }
+        }
         int actionNum=getMatterPermission(matterId,user.getId());
         if(actionNum==ActionEnum.AccessControl.getDesc()){
             return true;

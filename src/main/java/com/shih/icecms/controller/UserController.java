@@ -71,8 +71,17 @@ public class UserController {
         if(user !=null){
             return ApiResult.SUCCESS(user);
         }else{
-            return ApiResult.ERROR("未绑定账号");
+            return ApiResult.ERROR("未绑定账号，请使用账号密码登录");
         }
+    }
+    @ApiOperation("绑定账号")
+    @GetMapping( value = "/user/bindDingTalkAccount")
+    public ApiResult bindDingTalkAccount(@ApiParam("钉钉给的AuthCode")@RequestParam(value = "auth_code")String authCode) {
+        String rId=usersService.getRId(authCode);
+        User user = shiroUtil.getLoginUser();
+        user.setDingtalkId(rId);
+        usersService.updateById(user);
+        return ApiResult.SUCCESS(user);
     }
     @ApiOperation("获取用户列表")
     @GetMapping("/user/list")
@@ -109,7 +118,7 @@ public class UserController {
         matter.setCreator(userDto.getId());
         matter.setType(0);
         matter.setName(matter.getId());
-        matter.setParentId("root");
+        matter.setParentId("private");
         matter.setCreateTime(new Date().getTime());
         matter.setStatus(1);
         matter.setModifiedTime(new Date().getTime());

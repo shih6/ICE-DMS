@@ -6,6 +6,7 @@ import com.shih.icecms.dto.ApiResult;
 import com.shih.icecms.dto.MatterDTO;
 import com.shih.icecms.entity.FileHistory;
 import com.shih.icecms.entity.Matter;
+import com.shih.icecms.entity.MatterPermissions;
 import com.shih.icecms.entity.User;
 import com.shih.icecms.enums.ActionEnum;
 import com.shih.icecms.service.FileHistoryService;
@@ -76,6 +77,14 @@ public class MatterController {
         matter.setModifiedTime(new Date().getTime());
         matter.setParentId(parentId);
         matterService.save(matter);
+        if(parentId.equals("public")){
+            MatterPermissions matterPermissions=new MatterPermissions();
+            matterPermissions.setAction(ActionEnum.View.getDesc());
+            matterPermissions.setRoleId("0");
+            matterPermissions.setRoleType(0);
+            matterPermissions.setMatterId(matter.getId());
+            matterPermissionsService.save(matterPermissions);
+        }
         return ApiResult.SUCCESS(matter);
     }
     @ApiOperation(value = "生成临时访问地址")
