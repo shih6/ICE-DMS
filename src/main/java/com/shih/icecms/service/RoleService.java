@@ -1,7 +1,10 @@
 package com.shih.icecms.service;
 
+import com.shih.icecms.dto.RoleDto;
 import com.shih.icecms.entity.Role;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
 * @author 1
@@ -10,4 +13,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface RoleService extends IService<Role> {
     boolean hasRole(String roleId);
+    List<RoleDto> roleList();
 }

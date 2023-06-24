@@ -1,8 +1,12 @@
 package com.shih.icecms.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.shih.icecms.dto.AccessRoleDto;
+import com.shih.icecms.dto.MatterActionDto;
 import com.shih.icecms.entity.MatterPermissions;
 import com.shih.icecms.enums.ActionEnum;
+
+import java.util.List;
 
 /**
 * @author 1
@@ -12,6 +16,7 @@ import com.shih.icecms.enums.ActionEnum;
 public interface MatterPermissionsService extends IService<MatterPermissions> {
     int getMatterPermission(String matterId,String userId);
     boolean checkMatterPermission(String matterId, ActionEnum actionEnum);
-
     boolean checkRoleExists(String roleId,int roleType);
+    List<AccessRoleDto> accessRoleListByMatterId(String matterId);
+    List<AccessRoleDto> addPermission(List<MatterActionDto> matterActionDtoList);
 }

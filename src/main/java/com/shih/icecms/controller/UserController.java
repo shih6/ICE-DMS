@@ -78,6 +78,10 @@ public class UserController {
     @GetMapping( value = "/user/bindDingTalkAccount")
     public ApiResult bindDingTalkAccount(@ApiParam("钉钉给的AuthCode")@RequestParam(value = "auth_code")String authCode) {
         String rId=usersService.getRId(authCode);
+        User tmp=usersService.getOne(new LambdaQueryWrapper<User>().eq(User::getDingtalkId,rId));
+        if (tmp!=null) {
+            return ApiResult.ERROR("此账号已绑定至："+tmp.getUsername());
+        }
         User user = shiroUtil.getLoginUser();
         user.setDingtalkId(rId);
         usersService.updateById(user);

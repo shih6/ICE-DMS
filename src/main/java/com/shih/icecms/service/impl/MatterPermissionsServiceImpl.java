@@ -2,19 +2,20 @@ package com.shih.icecms.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shih.icecms.dto.AccessRoleDto;
 import com.shih.icecms.dto.ApiResult;
-import com.shih.icecms.entity.Matter;
-import com.shih.icecms.entity.MatterPermissions;
-import com.shih.icecms.entity.UserRoles;
-import com.shih.icecms.entity.User;
+import com.shih.icecms.dto.MatterActionDto;
+import com.shih.icecms.entity.*;
 import com.shih.icecms.enums.ActionEnum;
 import com.shih.icecms.mapper.MatterPermissionsMapper;
 import com.shih.icecms.service.*;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -101,7 +102,60 @@ public class MatterPermissionsServiceImpl extends ServiceImpl<MatterPermissionsM
         }
         return false;
     }
-
+    public List<AccessRoleDto> accessRoleListByMatterId(String matterId){
+        return baseMapper.accessRoleListByMatterId(matterId);
+    }
+    @Transactional(rollbackFor = {Exception.class})
+    public List<AccessRoleDto> addPermission(List<MatterActionDto> matterActionDtoList){
+        List<AccessRoleDto> accessRoleDtoList=new ArrayList<>();
+        User user=(User)SecurityUtils.getSubject().getPrincipal();
+        for (MatterActionDto matterActionDto:matterActionDtoList) {
+            // 检查是否存在文件
+            if(!matterActionDto.getMatterId().equals(user.getId())){
+                if(matterService.getById(matterActionDto.getMatterId())==null){
+                    throw new RuntimeException("文件不存在");
+                }
+            }
+            // 检查权限
+            checkMatterPermission(matterActionDto.getMatterId(), ActionEnum.AccessControl);
+            // 检查角色是否存在
+            if(checkRoleExists(matterActionDto.getRoleId(),matterActionDto.getRoleType())){
+                // 是否重复添加
+                MatterPermissions permissions=getOne(new LambdaQueryWrapper<MatterPermissions>().
+                        eq(MatterPermissions::getMatterId,matterActionDto.getMatterId()).
+                        eq(MatterPermissions::getRoleId,matterActionDto.getRoleId()).
+                        eq(MatterPermissions::getRoleType,matterActionDto.getRoleType()));
+                if(permissions!=null){
+                    permissions.setAction(matterActionDto.getActionNum());
+                    updateById(permissions);
+                }else{
+                    permissions = new MatterPermissions();
+                    permissions.setMatterId(matterActionDto.getMatterId());
+                    permissions.setRoleId(matterActionDto.getRoleId());
+                    permissions.setRoleType(matterActionDto.getRoleType());
+                    permissions.setAction(matterActionDto.getActionNum());
+                    save(permissions);
+                }
+                AccessRoleDto accessRoleDto=new AccessRoleDto(permissions.getId(), permissions.getMatterId(),
+                        permissions.getRoleId(), permissions.getRoleType(), permissions.getAction(), null,null,null,null );
+                if(permissions.getRoleType()==0){
+                    Role role=roleService.getById(permissions.getRoleId());
+                    accessRoleDto.setRoleName(role.getRoleName());
+                    accessRoleDto.setRoleDesc(role.getRoleDesc());
+                }
+                if(permissions.getRoleType()==1){
+                    User role=usersService.getById(permissions.getRoleId());
+                    accessRoleDto.setRoleName(role.getActualName());
+                    accessRoleDto.setRoleDesc(role.getUsername());
+                    accessRoleDto.setAvatar(role.getAvatar());
+                }
+                accessRoleDtoList.add(accessRoleDto);
+            }else{
+                throw new RuntimeException("角色不存在");
+            }
+        }
+        return accessRoleDtoList;
+    }
 }
 
 

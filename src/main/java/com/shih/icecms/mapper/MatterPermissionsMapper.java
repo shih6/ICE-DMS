@@ -1,7 +1,10 @@
 package com.shih.icecms.mapper;
 
+import com.shih.icecms.dto.AccessRoleDto;
 import com.shih.icecms.entity.MatterPermissions;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+import java.util.List;
 
 /**
 * @author 1
@@ -10,7 +13,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.shih.icecms.entity.MatterPermissions
 */
 public interface MatterPermissionsMapper extends BaseMapper<MatterPermissions> {
-
+    List<AccessRoleDto> accessRoleListByMatterId(String matterId);
 }
 
 
