@@ -162,7 +162,7 @@ public class MatterController {
 
 
     @ApiOperation(value = "文件下载")
-    @GetMapping("/matter/download")
+    @RequestMapping("/matter/download")
     public ApiResult download(@RequestParam String matterId, @RequestParam(required = false) String version, HttpServletResponse res) throws MinioException, IOException {
         matterPermissionsService.checkMatterPermission(matterId, ActionEnum.Download);
         Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId, matterId).eq(Matter::getType,1));

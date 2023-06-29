@@ -7,6 +7,7 @@ import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FastByteArrayOutputStream;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URL;
@@ -30,10 +32,11 @@ import java.util.List;
 public class MinioUtil {
     @Autowired
     private MinioConfig prop;
-
+    @Resource
+    private HttpServletRequest request;
     @Resource
     private MinioClient minioClient;
-
+    private static final String PATTERN = "^bytes=\\d*-\\d*(/\\d*)?(,\\d*-\\d*(/\\d*)?)*$";
     /**
      * 查看存储bucket是否存在
      * @return boolean
@@ -48,7 +51,6 @@ public class MinioUtil {
         }
         return found;
     }
-
     /**
      * 创建存储bucket
      * @return Boolean
@@ -91,9 +93,6 @@ public class MinioUtil {
         }
         return null;
     }
-
-
-
     /**
      * 文件上传
      *
@@ -125,7 +124,6 @@ public class MinioUtil {
         }
         return objectName;
     }
-
     /**
      * 预览图片
      * @param fileName
@@ -142,54 +140,134 @@ public class MinioUtil {
         }
         return null;
     }
-
     /**
      * 文件下载
      * @param objectName 对象名
-     * @param res response
+     * @param response response
      * @return Boolean
      */
-    public void download(String objectName, HttpServletResponse res) throws MinioException, IOException {
-        download(objectName, res,null);
+    public void download(String objectName, HttpServletResponse response) throws MinioException, IOException {
+        download(objectName, response,null);
     }
     /**
      * 文件下载
      * @param objectName 对象名
-     * @param res response
+     * @param response response
      * @param fileName 自定义文件名
      * @return Boolean
      */
-    public void download(String objectName, HttpServletResponse res,String fileName) throws MinioException, IOException {
+    public void download(String objectName, HttpServletResponse response,String fileName) throws MinioException, IOException {
         StatObjectResponse statObjectResponse;
         try{
             statObjectResponse=minioClient.statObject(StatObjectArgs.builder().bucket(prop.getBucketName()).object(objectName).build());
         }catch (Exception e){
             throw new MinioException(e.getMessage());
         }
+        Long size =statObjectResponse.size();
+        // 验证和解析Range请求头 -------------------------------------------------------------
+
+        long start=0;
+        long end=size-1;
+
+        // Validate and process Range and If-Range headers.
+        String range = request.getHeader("Range");
+        if (range != null) {
+
+            /*
+             * 如果Range请求头不满足规范格式，那么发送错误请求
+             * */
+            // Range header should match format "bytes=n-n,n-n,n-n...". If not, then return 416.
+            if (!range.matches(PATTERN)) {
+                response.setHeader("Content-Range", "bytes */" + size); // Required in 416.
+                response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+                return;
+            }
+
+            /*
+             * If-Range 头字段通常用于断点续传的下载过程中，用来自从上次中断后，确保下载的资源没有发生改变。
+             * */
+/*            String ifRange = request.getHeader("If-Range");
+            if (ifRange != null && !ifRange.equals(md5)) {
+                // 如果资源发生了改变，直接将数据全部返回
+                ranges.add(full);
+            }*/
+
+            /*
+             * 如果If-Range请求头是合法的，也就是视频数据并没有更新
+             * 例子：bytes:10-80,bytes:80-180
+             * */
+            // If any valid If-Range header, then process each part of byte range.
+                // substring去除bytes:
+            for (String part : range.substring(6).split(",")) {
+                // Assuming a file with size of 100, the following examples returns bytes at:
+                // 50-80 (50 to 80), 40- (40 to size=100), -20 (size-20=80 to size=100).
+
+                //去除多余空格
+                part = part.trim();
+
+                /*
+                 * 解决20-80及20-80/60的切割问题
+                 * */
+                start = subLong(part, 0, part.indexOf("-"));
+                int index1 = part.indexOf("/");
+                int index2 = part.length();
+                int index = index2 > index1 && index1 > 0 ? index1 : index2;
+                end = subLong(part, part.indexOf("-") + 1, index);
+
+                // 如果是-开头的情况 -20
+                    if (start == -1) {
+                        start = size - end;
+                        end = size - 1;
+                        // 如果是20但没有-的情况，或者end> size - 1的情况
+                    } else if (end == -1 || end > size - 1) {
+                        end = size - 1;
+                    }
+
+                    /*
+                     * 如果范围不合法, 80-10
+                     * */
+                    // Check if Range is syntactically valid. If not, then return 416.
+                    if (start > end) {
+                        response.setHeader("Content-Range", "bytes */" + size); // Required in 416.
+                        response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+                        return;
+                    }
+            }
+        }
+        if((end-start+1)!=size){
+            //断点传输下载视频返回206
+            response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
+        }
         GetObjectArgs objectArgs = GetObjectArgs.builder().bucket(prop.getBucketName())
-                .object(objectName).build();
-        try (GetObjectResponse response = minioClient.getObject(objectArgs)){
+                .object(objectName)
+                .offset(start)
+                .length(end-start+1)
+                .build();
+
+        response.setCharacterEncoding("utf-8");
+        // 设置强制下载不打开
+        response.setContentType("application/octet-stream");
+        response.setHeader("Accept-Ranges","bytes");
+        response.setHeader("Content-Length", String.valueOf(end-start+1));
+        //Content-Range，格式为：[要下载的开始位置]-[结束位置]/[文件总大小]
+        response.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + statObjectResponse.size());
+        response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(StringUtils.isEmpty(fileName)?objectName:fileName, "utf-8"));
+        try (GetObjectResponse objectResponse = minioClient.getObject(objectArgs)){
             byte[] buf = new byte[1024];
             int len;
-            try (FastByteArrayOutputStream os = new FastByteArrayOutputStream()){
-                while ((len=response.read(buf))!=-1){
-                    os.write(buf,0,len);
-                }
-                os.flush();
-                byte[] bytes = os.toByteArray();
-                res.setCharacterEncoding("utf-8");
-                // 设置强制下载不打开
-                res.setContentType("application/octet-stream");
-                res.setHeader("Accept-Ranges","bytes");
-                res.setContentLength(bytes.length);
-                res.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(StringUtils.isEmpty(fileName)?objectName:fileName, "utf-8"));
 
-                try (ServletOutputStream stream = res.getOutputStream()){
-                    stream.write(bytes);
-                    stream.flush();
+            try (ServletOutputStream stream = response.getOutputStream()){
+                while ((len=objectResponse.read(buf))!=-1){
+                    stream.write(buf,0,len);
                 }
+                stream.close();
+                stream.flush();
+                objectResponse.close();
             }
-        } catch (Exception e) {
+        }catch (ClientAbortException clientAbortException){
+            log.warn("用户停止下载");
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -275,5 +353,8 @@ public class MinioUtil {
             throw new RuntimeException("获取零时地址失败");
         }
     }
-
+    public static long subLong(String value, int beginIndex, int endIndex) {
+        String substring = value.substring(beginIndex, endIndex);
+        return (substring.length() > 0) ? Long.parseLong(substring) : -1;
+    }
 }
