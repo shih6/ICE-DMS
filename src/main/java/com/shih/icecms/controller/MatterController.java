@@ -26,6 +26,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import jdk.jfr.Timespan;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -119,8 +120,7 @@ public class MatterController {
         }
         matterPermissionsService.checkMatterPermission(matterId, ActionEnum.View);
         MatterDTO parentMatter=matterService.getMatterDtoById(matterId, user.getId());
-        Page<MatterDTO> page = matterService.listByPage(matterId, user.getId(), pageNum,pageSize);
-        parentMatter.setSubMatters(page);
+        parentMatter.setSubMatters(matterService.list(matterId, user.getId(), null));
         return ApiResult.SUCCESS(parentMatter);
     }
     @PostMapping("/matter/add")
@@ -213,5 +213,12 @@ public class MatterController {
         Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId, matterId));
         List<FileHistory> fileHistories = fileHistoryService.list(new LambdaQueryWrapper<FileHistory>().eq(FileHistory::getMatterId, matterId));
         return ApiResult.SUCCESS(fileHistories);
+    }
+    @ApiOperation(value = "请求TreeViewNode")
+    @GetMapping("/matter/tree")
+    public ApiResult tree(){
+        User user =(User) SecurityUtils.getSubject().getPrincipal();
+        MatterDTO matterDTO=matterService.getTree("root", user.getId());
+        return ApiResult.SUCCESS(matterDTO);
     }
 }

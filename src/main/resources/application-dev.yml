@@ -36,8 +36,7 @@ spring:
 
 logging:
   level:
-    root: debug
-    com.shih: debug
+    com.shih: info
 #  file:
 #    path: e:/wwwroot/log1  #日志保存路径
 minio:

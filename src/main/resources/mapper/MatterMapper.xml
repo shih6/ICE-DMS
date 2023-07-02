@@ -37,7 +37,7 @@
                 -- creator权限
                 OR m.creator=#{userId}) and m.id=#{matterId} group by id
     </select>
-    <select id="listByPage" resultType="com.shih.icecms.dto.MatterDTO">
+    <select id="list" resultType="com.shih.icecms.dto.MatterDTO">
         select * from(
                          SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,
                                 u.actual_name as creator_name,
@@ -52,7 +52,13 @@
                                  -- role权限
                                  OR (mp.role_type = 0 AND ur.user_id = #{userId} )
                                  -- creator权限
-                                 OR m.creator=#{userId}) and m.parent_id=#{matterId}
+                                 OR m.creator=#{userId})
+                         <if test="matterId!=null">
+                             and m.parent_id=#{matterId}
+                         </if>
+                        <if test="type!=null">
+                            and m.type=#{type}
+                        </if>
                      ) a where a.action>0 group by id
     </select>
 </mapper>

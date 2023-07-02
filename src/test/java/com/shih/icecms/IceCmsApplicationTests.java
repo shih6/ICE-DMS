@@ -1,13 +1,23 @@
 package com.shih.icecms;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.shih.icecms.config.MinioConfig;
+import com.shih.icecms.dto.MatterDTO;
+import com.shih.icecms.entity.Matter;
+import com.shih.icecms.entity.User;
+import com.shih.icecms.service.MatterPermissionsService;
+import com.shih.icecms.service.MatterService;
+import com.shih.icecms.service.UsersService;
 import com.shih.icecms.utils.MinioUtil;
 import io.minio.errors.MinioException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @SpringBootTest
 class IceCmsApplicationTests {
@@ -15,17 +25,22 @@ class IceCmsApplicationTests {
 	private MinioUtil minioUtil;
 	@Autowired
 	private MinioConfig prop;
+	@Resource
+	private MatterPermissionsService matterPermissionsService;
+	@Resource
+	private MatterService matterService;
+	@Resource
+	private UsersService usersService;
 
 	@Test
 	void contextLoads() throws IOException, MinioException {
-//		minioUtil.upload(new URL("http://192.168.0.107:9000/cache/files/data/3a105ab1-ddcd-4af8-83e8-803386ce7fab1_9951/output.docx/output.docx?md5=oPZfQWHMfPpKb7S32rypWw&expires=1683130184&filename=output.docx"), "3a105ab1-ddcd-4af8-83e8-803386ce7fab1/2.doc");
-//		minioUtil.upload(new URL("http://192.168.0.107:9000/cache/files/data/3a105ab1-ddcd-4af8-83e8-803386ce7fab1_9951/changes.zip/changes.zip?md5=f3hNxUXBJl65HgfbDm6Fkg&expires=1683130184&filename=changes.zip"), "3a105ab1-ddcd-4af8-83e8-803386ce7fab1/2.zip");
-//		URL a=new URL("http://192.168.0.107:9000/cache/files/data/3a105ab1-ddcd-4af8-83e8-803386ce7fab1_9951/changes.zip/changes.zip?md5=f3hNxUXBJl65HgfbDm6Fkg&expires=1683130184&filename=changes.zip");
-//		a.openConnection();
-		minioUtil.listVersions("1.zip");
-		System.out.println("");
-
+		User user =usersService.getById("test");
+		String matterId="root";
+		matterService.getTree(matterId,user.getId());
 	}
+
+
+
 	public static void main(String[] args){
 
 

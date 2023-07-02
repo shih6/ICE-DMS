@@ -16,16 +16,17 @@ import com.shih.icecms.utils.CommonUtil;
 import com.shih.icecms.utils.MinioUtil;
 import io.minio.errors.MinioException;
 import org.apache.shiro.SecurityUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.Resource;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -54,15 +55,34 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
         this.minioUtil = minioUtil;
     }
 
+    @Override
     public Page<MatterDTO> listByPage(String matterId, String userId, int pageNum, int pageSize){
-        return baseMapper.listByPage(Page.of(pageNum,pageSize),matterId, userId, 31);
+        Page<MatterDTO> page=baseMapper.list(Page.of(pageNum,pageSize),matterId, userId, 31);
+        page.getRecords().forEach(i->{
+            if(i.getSubMatters()==null){
+                i.setSubMatters(new ArrayList<>());
+            }
+        });
+        return page;
     }
-
+    @Override
+    public List<MatterDTO> list(String matterId, String userId,Integer type){
+        List<MatterDTO> list = baseMapper.list(matterId, userId, type, 31);
+        list.forEach(i->{
+            if(i.getSubMatters()==null){
+                i.setSubMatters(new ArrayList<>());
+            }
+        });
+        return list;
+    }
     @Override
     public MatterDTO getMatterDtoById(String matterId, String userId) {
-        return baseMapper.getMatterDtoById(matterId, userId, 31);
+        MatterDTO dto=baseMapper.getMatterDtoById(matterId, userId, 31);
+        if(dto.getSubMatters()==null){
+            dto.setSubMatters(new ArrayList<>());
+        }
+        return dto;
     }
-
     @Override
     @Transactional
     public MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId){
@@ -93,8 +113,7 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
             minioUtil.upload(multipartFile, newHistory.getObjectName());
         }
         MatterDTO matterDTO = getMatterDtoById(matter.getId(), user.getId());
-        Page<MatterDTO> page = listByPage(matter.getId(), user.getId(), 0,0);
-        matterDTO.setSubMatters(page);
+        matterDTO.setSubMatters(list(matter.getId(), user.getId(),null));
         return matterDTO;
     }
     @Transactional
@@ -109,6 +128,7 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
                 CommonUtil.getFilenameExtensionWithDot(matter.getName()));
         fileHistoryService.save(newHistory);
     }
+    @Override
     @Transactional
     public Boolean deleteMatter(String matterId){
         Matter matter = getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId, matterId).eq(Matter::getType,1));
@@ -128,6 +148,35 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
             return true;
         }
         return false;
+    }
+    @Override
+    public MatterDTO getTree(String matterId,String userId){
+        MatterDTO root=getMatterDtoById(matterId, userId);
+        List<MatterDTO> list = list(null, userId,0);
+        // 构建树结构
+        list.forEach(i->{
+            List<String> outPut=new ArrayList<>();
+            getPath(i.getId(),outPut);
+            for (int j = 1; j < outPut.size(); j++) {
+                String parentId=outPut.get(j-1);
+                String currentId=outPut.get(j);
+                MatterDTO parentMatterDTO = root.findNode(parentId);
+                MatterDTO currentMatterDTO = getMatterDtoById(currentId, userId);
+                if (parentMatterDTO.getSubMatters().stream().noneMatch(p -> p.getId().equals(currentMatterDTO.getId()))) {
+                    parentMatterDTO.getSubMatters().add(currentMatterDTO);
+                }
+            }
+        });
+        return root;
+    }
+    @Override
+    public void getPath(String matterId, @NotNull List<String> outPut){
+        Matter matter=getById(matterId);
+        outPut.add(0,matter.getId());
+        Matter parentMatter=getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId,matter.getParentId()));
+        if(parentMatter!=null){
+            getPath(parentMatter.getId(), outPut);
+        }
     }
 }
 

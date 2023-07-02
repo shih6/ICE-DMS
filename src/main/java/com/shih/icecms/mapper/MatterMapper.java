@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shih.icecms.dto.MatterDTO;
 import com.shih.icecms.entity.Matter;
 
+import java.util.List;
+
 /**
 * @author 1
 * @description 针对表【matter】的数据库操作Mapper
@@ -12,7 +14,8 @@ import com.shih.icecms.entity.Matter;
 * @Entity com.shih.icecms.entity.Matter
 */
 public interface MatterMapper extends BaseMapper<Matter> {
-    Page<MatterDTO> listByPage(Page<MatterDTO> page, String matterId, String userId, int fullAction);
+    Page<MatterDTO> list(Page<MatterDTO> page, String matterId, String userId, int fullAction);
+    List<MatterDTO> list(String matterId, String userId, Integer type, int fullAction);
     MatterDTO getMatterDtoById(String matterId,String userId, int fullAction);
 }
 

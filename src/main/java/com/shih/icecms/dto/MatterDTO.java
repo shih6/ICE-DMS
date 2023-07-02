@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,5 +23,17 @@ public class MatterDTO {
     private Integer size;
     private Integer action;
     private String creatorName;
-    private Page<MatterDTO> subMatters;
+    private List<MatterDTO> subMatters;
+    public MatterDTO findNode( String targetMatterId){
+        if(getId().equals(targetMatterId)){
+            return this;
+        }
+        for (MatterDTO sub: getSubMatters()) {
+            MatterDTO tmp= sub.findNode(targetMatterId);
+            if(tmp!=null){
+                return tmp;
+            }
+        }
+        return null;
+    }
 }
