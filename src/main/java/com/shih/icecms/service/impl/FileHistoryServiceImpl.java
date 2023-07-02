@@ -13,6 +13,7 @@ import com.shih.icecms.service.FileChangesService;
 import com.shih.icecms.service.FileHistoryService;
 import com.shih.icecms.service.MatterService;
 import com.shih.icecms.service.UsersService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -29,12 +30,16 @@ import java.util.List;
 @Service
 public class FileHistoryServiceImpl extends ServiceImpl<FileHistoryMapper, FileHistory>
         implements FileHistoryService {
-    @Resource
     private UsersService usersService;
-    @Resource
     private FileChangesService fileChangesService;
-    @Resource
-    private MatterService matterService;
+    @Autowired
+    public void setUsersService(UsersService usersService) {
+        this.usersService = usersService;
+    }
+    @Autowired
+    public void setFileChangesService(FileChangesService fileChangesService) {
+        this.fileChangesService = fileChangesService;
+    }
     @Value("${setting.documentServer.fileStorageServerHost}")
     private String fileStorageServerHost;
     public List<History> GetOnlyOfficeHistoryByFileId(String fileId) {

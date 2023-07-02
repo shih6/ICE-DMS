@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.shih.icecms.entity.User;
 import com.shih.icecms.service.UsersService;
 import com.shih.icecms.utils.JwtUtil;
+import io.jsonwebtoken.JwtException;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -62,7 +63,7 @@ public class UserRealm extends AuthorizingRealm {
             }
 
             return new SimpleAuthenticationInfo(user, passWord, getName());
-        } catch (Exception e) {
+        } catch (JwtException e) {
             throw new AuthenticationException("token错误，请重新登入！");
         }
     }

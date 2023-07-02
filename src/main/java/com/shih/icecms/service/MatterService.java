@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.shih.icecms.dto.MatterDTO;
 import com.shih.icecms.entity.Matter;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
 * @author 1
@@ -13,4 +15,6 @@ import com.shih.icecms.entity.Matter;
 public interface MatterService extends IService<Matter> {
     Page<MatterDTO> listByPage(String matterId, String userId, int pageNum, int pageSize);
     MatterDTO getMatterDtoById(String matterId,String userId);
+    MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId);
+    Boolean deleteMatter(String matterId);
 }

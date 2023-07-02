@@ -341,14 +341,14 @@ public class MinioUtil {
     }
     /**
      * 获取临时授权地址
-     * @param fileName 文件名(key)
+     * @param objectName 文件名(key)
      * @param expireTime second
      * @return
      * @throws Exception
      */
-    public String GetTemporaryAccessUrl(String fileName,int expireTime){
+    public String GetTemporaryAccessUrl(String objectName,int expireTime){
         try {
-            return minioClient.getPresignedObjectUrl( GetPresignedObjectUrlArgs.builder().bucket(prop.getBucketName()).expiry(expireTime).object(fileName).method(Method.GET).build());
+            return minioClient.getPresignedObjectUrl( GetPresignedObjectUrlArgs.builder().bucket(prop.getBucketName()).expiry(expireTime).object(objectName).method(Method.GET).build());
         }catch (Exception e){
             throw new RuntimeException("获取零时地址失败");
         }

@@ -43,8 +43,8 @@ logging:
 minio:
   endpoint: ${setting.minioServerHost} #Minio服务所在地址
   bucketName: tulaoda #存储桶名称
-  accessKey: WHuOnmrpKpH1xuZ6 #访问的key
-  secretKey: iKLKkPdVAPVcNanYv2c60wbnxT4LP5Co #访问的秘钥
+  accessKey: 1OvzPcDvOey2RVtozHdv #访问的key
+  secretKey: lHcEJOzUdjB8v04eOm7airrq7cqlSn7OUanovKDu #访问的秘钥
 shiro:
   web:
     enabled: true

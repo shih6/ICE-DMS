@@ -1,5 +1,7 @@
 package com.shih.icecms.controller;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shih.icecms.dto.ApiResult;
@@ -14,11 +16,15 @@ import com.shih.icecms.service.MatterPermissionsService;
 import com.shih.icecms.service.MatterService;
 import com.shih.icecms.service.UsersService;
 import com.shih.icecms.utils.CommonUtil;
+import com.shih.icecms.utils.JwtUtil;
 import com.shih.icecms.utils.MinioUtil;
 import com.shih.icecms.utils.ShiroUtil;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.minio.errors.MinioException;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import jdk.jfr.Timespan;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -31,27 +37,30 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @Slf4j
 public class MatterController {
-    @Autowired
-    private MinioUtil minioUtil;
     @Resource
-    private HttpServletRequest httpServletRequest;
-    @Autowired
+    private MinioUtil minioUtil;
     private MatterService matterService;
-    @Autowired
+    @Resource
     private FileHistoryService fileHistoryService;
-    @Autowired
+    @Resource
     private ShiroUtil shiroUtil;
-    @Autowired
     private MatterPermissionsService matterPermissionsService;
     @Resource
     private UsersService usersService;
+    @Autowired
+    public void setMatterService(MatterService matterService) {
+        this.matterService = matterService;
+    }
+    @Autowired
+    public void setMatterPermissionsService(MatterPermissionsService matterPermissionsService) {
+        this.matterPermissionsService = matterPermissionsService;
+    }
+
     @ApiOperation(value = "创建文件夹")
     @PutMapping("/matter/addFolder")
     public ApiResult addFolder(@RequestParam(required = false) String parentId,@RequestParam String name){
@@ -114,53 +123,12 @@ public class MatterController {
         parentMatter.setSubMatters(page);
         return ApiResult.SUCCESS(parentMatter);
     }
-
-//    @Transactional
     @PostMapping("/matter/add")
     @ApiOperation(value = "上传文件")
-    public ApiResult upload(@RequestParam(value = "file") MultipartFile multipartFile, @RequestParam(required = false) String matterId) {
-        User user =shiroUtil.getLoginUser();
-        if(!StringUtils.hasText(matterId)){
-            matterId = user.getId();
-        }
-        // 能否对改文件夹内容进行修改
-        matterPermissionsService.checkMatterPermission(StringUtils.hasText(matterId)?matterId: user.getId(), ActionEnum.Edit);
-        FileHistory newHistory=new FileHistory();
-        Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getParentId, matterId).eq(Matter::getType,1).eq(Matter::getName,multipartFile.getOriginalFilename()));
-        if(matter !=null){
-            // 能否覆盖此文件
-            matterPermissionsService.checkMatterPermission(matter.getId(), ActionEnum.Edit);
-            List<FileHistory> fileHistoryList=fileHistoryService.getFileHistoryByMatterId(matter.getId());
-            newHistory.setVersion(fileHistoryList.get(0).getVersion()+1);
-            saveMatter(user, newHistory, matter);
-            minioUtil.upload(multipartFile, newHistory.getObjectName());
-        }else{
-            matter=new Matter();
-            matter.setCreator(user.getId());
-            matter.setType(1);
-            matter.setName(multipartFile.getOriginalFilename());
-            matter.setParentId(matterId);
-            matter.setCreateTime(new Date().getTime());
-            newHistory.setVersion(1);
-            saveMatter(user, newHistory, matter);
-            minioUtil.upload(multipartFile, newHistory.getObjectName());
-        }
-        return ApiResult.SUCCESS(newHistory);
+    public ApiResult upload(@RequestParam(value = "file") MultipartFile multipartFile, @RequestParam(required = false,value = "matterId") String parentMatterId) {
+        MatterDTO matterDTO=matterService.uploadFile(multipartFile,parentMatterId);
+        return ApiResult.SUCCESS(matterDTO);
     }
-
-    private void saveMatter(User user, FileHistory newHistory, Matter matter) {
-        matter.setModifiedTime(new Date().getTime());
-        matterService.saveOrUpdate(matter);
-        newHistory.setUserId(user.getId());
-        newHistory.setCreated(new Date());
-        newHistory.setDocKey(UUID.randomUUID().toString());
-        newHistory.setMatterId(matter.getId());
-        newHistory.setObjectName(matter.getParentId()+"/"+matter.getId() +"-"+newHistory.getVersion()+
-                CommonUtil.getFilenameExtensionWithDot(matter.getName()));
-        fileHistoryService.save(newHistory);
-    }
-
-
     @ApiOperation(value = "文件下载")
     @RequestMapping("/matter/download")
     public ApiResult download(@RequestParam String matterId, @RequestParam(required = false) String version, HttpServletResponse res) throws MinioException, IOException {
@@ -178,26 +146,47 @@ public class MatterController {
         minioUtil.download(fileHistory.getObjectName(),res, matter.getName());
         return ApiResult.SUCCESS();
     }
-
+    @ApiOperation(value = "下载文件")
+    @GetMapping ("/matter/downloadByToken/{token}")
+    public ApiResult downloadByToken(@PathVariable String token,HttpServletResponse res) throws MinioException, IOException {
+        try {
+            Claims claims = JwtUtil.parseJWT(token);
+            String objectName = claims.get("objectName").toString();
+            String fileName = claims.get("fileName").toString();
+            minioUtil.download(objectName,res, fileName);
+        } catch (JwtException e) {
+            return ApiResult.ERROR("链接过期");
+        }
+        return ApiResult.SUCCESS(token);
+    }
+    @ApiOperation(value = "临时访问地址")
+    @GetMapping ("/matter/getTempAccessToken")
+    public ApiResult getTempAccessToken(@RequestParam String matterId, @RequestParam(required = false) String version, HttpServletResponse res) throws MinioException, IOException {
+        matterPermissionsService.checkMatterPermission(matterId, ActionEnum.Download);
+        Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId, matterId).eq(Matter::getType,1));
+        FileHistory fileHistory=fileHistoryService.getOne(new LambdaQueryWrapper<FileHistory>().
+                eq(version!=null,FileHistory::getVersion,version).
+                eq(FileHistory::getMatterId,matter.getId()).
+                orderBy(version==null,false,FileHistory::getCreated).
+                last("limit 1"));
+        if(fileHistory==null){
+            return ApiResult.ERROR("version not exists");
+        }
+        res.setHeader("Version",fileHistory.getVersion().toString());
+        Map<String,Object> map=new HashMap<>();
+        map.put("objectName",fileHistory.getObjectName());
+        map.put("fileName",matter.getName());
+        String token= JwtUtil.createJWT(map, (long) (24*60*60));
+        return ApiResult.SUCCESS(token);
+    }
     @ApiOperation(value = "文件删除")
     @DeleteMapping("/matter/delete")
     public ApiResult delete(@RequestParam String matterId)   {
-        Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId, matterId).eq(Matter::getType,1));
-        if(matter!=null){
-            matterPermissionsService.checkMatterPermission(matterId, ActionEnum.Delete);
-            var fileHistorys=fileHistoryService.list(new LambdaQueryWrapper<FileHistory>().eq(FileHistory::getMatterId,matter.getId()));
-            for (FileHistory item:fileHistorys) {
-                try {
-                    minioUtil.delete(item.getObjectName());
-                } catch (MinioException | IOException | NoSuchAlgorithmException | InvalidKeyException e) {
-                    log.error(e.getMessage());
-//                    throw new RuntimeException(e);
-                }
-                fileHistoryService.removeById(item.getId());
-            }
-            matterService.removeById(matter.getId());
+        if(matterService.deleteMatter(matterId)){
+            return ApiResult.SUCCESS("删除成功");
+        }else{
+            return ApiResult.ERROR("删除失败");
         }
-        return ApiResult.SUCCESS("删除成功");
     }
     @ApiOperation(value = "文件下载")
     @GetMapping("/downloadByObjectName")

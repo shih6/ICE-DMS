@@ -1,10 +1,7 @@
 package com.shih.icecms.utils;
 
 import com.alibaba.fastjson.JSON;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -49,6 +46,14 @@ public class JwtUtil {
     public static String createJWT(Map<String, Object> payloadClaims) {
         // 设置过期时间 空
         JwtBuilder builder = getJwtBuilder("", null, getUUID());
+        builder.setClaims(payloadClaims);  // and write claim to the jwt
+        return builder.compact();
+    }
+    /**
+     * 生成 jtw
+     */
+    public static String createJWT(Map<String, Object> payloadClaims,Long ttlMillis) {
+        JwtBuilder builder = getJwtBuilder("", ttlMillis, getUUID());
         builder.setClaims(payloadClaims);  // and write claim to the jwt
         return builder.compact();
     }
@@ -133,7 +138,7 @@ public class JwtUtil {
      * @return
      * @throws Exception
      */
-    public static Claims parseJWT(String jwt) throws Exception {
+    public static Claims parseJWT(String jwt) throws JwtException{
         var secretKey = generalKey();
         return Jwts.parser()
                 .setSigningKey(secretKey)
@@ -146,16 +151,22 @@ public class JwtUtil {
      * @param token
      * @return
      */
-    public static boolean isExpire(String token) throws Exception {
-        return System.currentTimeMillis() > parseJWT(token).getExpiration().getTime();
+    public static boolean isExpire(String token) {
+        try {
+            parseJWT(token);
+        } catch (JwtException e){
+            return true;
+        }
+        return false;
     }
     //测试方法
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws JwtException {
         //JWT加密
-        String jwt = createJWT("123456");
+
+        String jwt = getJwtBuilder("token",1L,getUUID()).compact();
         System.out.println(jwt);//eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJhYzBlYzk3ZDM0OGI0YmVkYjlmY2Q5NmZiNGViMmZkNCIsInN1YiI6IjEyMzQ1NiIsImlzcyI6InNnIiwiaWF0IjoxNjQ4OTg2NjkxLCJleHAiOjE2NDg5OTAyOTF9.G-K2XlcmE2lP7EOldbpp1rs743uvTu1NoYMo_g7sjkQ
         //JWT解密  时间过期会报错，须重新生成再解析
-        Claims claims = parseJWT("eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJkZDYzZWNmYjIyYTk0MjdlYjBhZWZmNjEyZWMxODg0NCIsInN1YiI6IjEyMzQ1NiIsImlzcyI6InNnIiwiaWF0IjoxNjY1MjM5OTM3LCJleHAiOjE2NjUyODMxMzd9.nyMiypVTC4vb1qy8nTHR-l5rkwOKFghEntN6xmAD6kw");
+        Claims claims = parseJWT("eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJhYzBlYzk3ZDM0OGI0YmVkYjlmY2Q5NmZiNGViMmZkNCIsInN1YiI6IjEyMzQ1NiIsImlzcyI6InNnIiwiaWF0IjoxNjQ4OTg2NjkxLCJleHAiOjE2NDg5OTAyOTF9.G-K2XlcmE2lP7EOldbpp1rs743uvTu1NoYMo_g7sjkQ");
         String subject = claims.getSubject();
         System.out.println(subject);
     }

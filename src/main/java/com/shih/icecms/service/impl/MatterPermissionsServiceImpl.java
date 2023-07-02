@@ -11,6 +11,8 @@ import com.shih.icecms.mapper.MatterPermissionsMapper;
 import com.shih.icecms.service.*;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,16 +30,29 @@ import java.util.Objects;
 @Service
 public class MatterPermissionsServiceImpl extends ServiceImpl<MatterPermissionsMapper, MatterPermissions>
     implements MatterPermissionsService{
-    @Resource
-    MatterService matterService;
-    @Resource
-    UserRolesService userRolesService;
-    @Resource
-    RoleService roleService;
-    @Resource
-    UsersService usersService;
+    private MatterService matterService;
+    private UserRolesService userRolesService;
+    private RoleService roleService;
+    private UsersService usersService;
+    @Autowired
+    @Lazy
+    public void setMatterService(MatterService matterService) {
+        this.matterService = matterService;
+    }
+    @Autowired
+    public void setUserRolesService(UserRolesService userRolesService) {
+        this.userRolesService = userRolesService;
+    }
+    @Autowired
+    public void setRoleService(RoleService roleService) {
+        this.roleService = roleService;
+    }
+    @Autowired
+    public void setUsersService(UsersService usersService) {
+        this.usersService = usersService;
+    }
 
-    public int getMatterPermission(String matterId,String userId) {
+    public int getMatterPermission(String matterId, String userId) {
         // 根目录
         if(Objects.equals(matterId, userId)){
             return ActionEnum.AccessControl.getDesc();
