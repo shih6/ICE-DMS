@@ -1,6 +1,7 @@
 package com.shih.icecms.shiro;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.shih.icecms.entity.User;
 import com.shih.icecms.service.UsersService;
 import com.shih.icecms.utils.JwtUtil;
@@ -25,13 +26,6 @@ public class MyHashedCredentialsMatcher extends HashedCredentialsMatcher {
 
     @Resource
     private UsersService userService;//从数据库里获取用户信息的service
-    @Resource
-    RedisTemplate<Object,Object> redisTemplate;
-
-    public static final String KEY_PREFIX = "shiro:cache:retryLimit:";
-
-    public static final Integer MAX = 5;// 最大登录次数
-
     @Override
     public boolean doCredentialsMatch(AuthenticationToken token, AuthenticationInfo info) {
         // 获取用户名
@@ -43,27 +37,14 @@ public class MyHashedCredentialsMatcher extends HashedCredentialsMatcher {
         }
         String userName = json.get("userName");
         String passWord = json.get("passWord");
-        String key = KEY_PREFIX + userName;
         // 获取用户登录失败次数
-        RedisAtomicInteger atomicInteger=atomicInteger= new RedisAtomicInteger (key,redisTemplate.getConnectionFactory());
-        User user = (User) info.getPrincipals().getPrimaryPrincipal();
-        atomicInteger.expire(5, TimeUnit.MINUTES);
-        if (atomicInteger.incrementAndGet() > MAX){
-            // 如果用户登录失败次数大于5次，抛出锁定用户异常，并修改数据库用户状态字段
-            if (user != null && user.getStatus() == 1){
-                user.setStatus(2);// 设置为锁定状态
-                userService.updateById(user);
-            }
-            log.info("锁定用户"+ userName);
-            throw new ExcessiveAttemptsException();
+        User user = userService.getOne(new QueryWrapper<User>().lambda().eq(User::getUsername,userName));
+        if(user.getStatus()==2){
+            throw new AuthenticationException("账号已被锁定");
         }
         // 判断用户的账号和密码是否正确
-        boolean matches = BCrypt.checkpw(passWord, user.getPassword());
-        // 如果匹配上了
-        if (matches){
-            atomicInteger.expire(0,TimeUnit.SECONDS);
-        } else {
-            throw new AuthenticationException("密码错误,还有"+(5-atomicInteger.get())+"次机会");
+        if(!BCrypt.checkpw(passWord, user.getPassword())){
+            throw new AuthenticationException("密码或用户名已更改，请重新登录");
         }
         return true;
     }

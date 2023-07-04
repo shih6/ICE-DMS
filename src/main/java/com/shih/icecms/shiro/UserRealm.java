@@ -16,15 +16,15 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 
 @Service
 public class UserRealm extends AuthorizingRealm {
     @Autowired
     private UsersService usersService;
-
-
-
+    @Autowired
+    private HttpServletResponse response;
     /**
      * 大坑！，必须重写此方法，不然Shiro会报错
      */

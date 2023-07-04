@@ -21,8 +21,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.ExcessiveAttemptsException;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.support.atomic.RedisAtomicInteger;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -37,6 +41,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @Api(value = "登录",tags = {"登录"})
@@ -56,16 +61,36 @@ public class UserController {
     private MatterService matterService;
     @Resource
     private UserRolesService userRolesService;
+    @Resource
+    RedisTemplate<Object,Object> redisTemplate;
+    public static final String KEY_PREFIX = "shiro:cache:retryLimit:";
+    public static final Integer MAX = 5;// 最大登录次数
 
     @ApiOperation("账号密码登录")
     @GetMapping(value = "/user/login")
     public ApiResult passwordLogin(@RequestParam String userName,@RequestParam String passWord) {
         User user =usersService.getOne(new QueryWrapper<User>().lambda().eq(User::getUsername,userName));
+        String key = KEY_PREFIX + userName;
+        RedisAtomicInteger atomicInteger= new RedisAtomicInteger (key,redisTemplate.getConnectionFactory());
+        atomicInteger.expire(5, TimeUnit.MINUTES);
+        if (atomicInteger.incrementAndGet() > MAX){
+            // 如果用户登录失败次数大于5次，抛出锁定用户异常，并修改数据库用户状态字段
+            if (user != null && user.getStatus() == 1){
+                user.setStatus(2);// 设置为锁定状态
+                usersService.updateById(user);
+                log.info("锁定用户"+ userName);
+                return ApiResult.ERROR("账号已被锁定");
+            }
+        }
+        if(user!=null&&user.getStatus()==2){
+            return ApiResult.ERROR("账号已被锁定");
+        }
         if(user !=null&& BCrypt.checkpw(passWord, user.getPassword())){
+            atomicInteger.expire(0,TimeUnit.SECONDS);
             response.setHeader("Authorization", JwtUtil.createJWT(user.getUsername(),passWord));
             return ApiResult.SUCCESS(user);
         }else{
-            return ApiResult.ERROR("账号或密码错误");
+            return ApiResult.ERROR("账号或密码错误,还有"+(5-atomicInteger.get())+"次机会");
         }
     }
 

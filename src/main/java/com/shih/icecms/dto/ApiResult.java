@@ -3,6 +3,7 @@ package com.shih.icecms.dto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.NoArgsConstructor;
+import org.springframework.http.HttpStatus;
 
 @ApiModel()
 @NoArgsConstructor
@@ -24,8 +25,11 @@ public class ApiResult<T> {
         this.msg = msg;
         this.data = data;
     }
-    public static ApiResult<?>  ERROR(String message){
+    public static ApiResult ERROR(String message){
         return new ApiResult<>(400, message, null);
+    }
+    public static ApiResult UNAUTHORIZED(String message){
+        return new ApiResult<>(HttpStatus.UNAUTHORIZED.value(), message, null);
     }
     public static <T> ApiResult<T> ERROR(String message,T data){
         return new ApiResult<>(200, message, data);

@@ -49,14 +49,13 @@ public class JWTFilter extends BasicHttpAuthenticationFilter {
         //1.检查请求头中是否含有token
         HttpServletRequest httpServletRequest= (HttpServletRequest) request;
         String token = httpServletRequest.getHeader("Authorization");
-        //2. 如果客户端没有携带token，拦下请求
-        if(null==token||"".equals(token)){
-            responseTokenError(response, ApiResult.ERROR("未登录"));
-            return false;
-        }
-        //3. 如果有，对进行进行token验证
-        JwtToken jwtToken = new JwtToken(token);
         try {
+            //2. 如果客户端没有携带token，拦下请求
+            if(null==token||"".equals(token)){
+                throw new AuthenticationException("未登录");
+            }
+            //3. 如果有，对进行进行token验证
+            JwtToken jwtToken = new JwtToken(token);
             SecurityUtils.getSubject().login(jwtToken);
         } catch (AuthenticationException e) {
             log.error(e.getMessage());
@@ -89,7 +88,7 @@ public class JWTFilter extends BasicHttpAuthenticationFilter {
      */
     private void responseTokenError(ServletResponse response, ApiResult result) {
         HttpServletResponse httpServletResponse = WebUtils.toHttp(response);
-        httpServletResponse.setStatus(HttpStatus.OK.value());
+        httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
         httpServletResponse.setCharacterEncoding("UTF-8");
         httpServletResponse.setContentType("application/json; charset=utf-8");
         try (PrintWriter out = httpServletResponse.getWriter()) {
