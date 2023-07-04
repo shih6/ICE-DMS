@@ -5,8 +5,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.shih.icecms.dto.ApiResult;
 import com.shih.icecms.dto.MatterDTO;
 import com.shih.icecms.entity.Matter;
+import com.shih.icecms.entity.MatterPermissions;
 import com.shih.icecms.entity.User;
+import com.shih.icecms.entity.UserRoles;
+import com.shih.icecms.service.MatterPermissionsService;
 import com.shih.icecms.service.MatterService;
+import com.shih.icecms.service.UserRolesService;
 import com.shih.icecms.service.UsersService;
 import com.shih.icecms.utils.CommonUtil;
 import com.shih.icecms.utils.JwtUtil;
@@ -50,6 +54,8 @@ public class UserController {
     private MinioUtil minioUtil;
     @Resource
     private MatterService matterService;
+    @Resource
+    private UserRolesService userRolesService;
 
     @ApiOperation("账号密码登录")
     @GetMapping(value = "/user/login")
@@ -96,8 +102,15 @@ public class UserController {
     }
     @ApiOperation("账号状态修改")
     @PostMapping("/user/status")
-    public ApiResult<User> userStatus(@RequestBody User userDto){
+    public ApiResult userStatus(@RequestBody User userDto){
+        User one = usersService.getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, userDto.getUsername()));
+        if(one!=null&&!one.getId().equals(userDto.getId())){
+            return ApiResult.ERROR("用户名不能重复");
+        }
         usersService.updateById(userDto);
+        Matter matter=matterService.getById(userDto.getId());
+        matter.setName(userDto.getActualName());
+        matterService.updateById(matter);
         return ApiResult.SUCCESS(userDto);
     }
     @ApiOperation("创建账号")
@@ -121,12 +134,16 @@ public class UserController {
         matter.setId(userDto.getId());
         matter.setCreator(userDto.getId());
         matter.setType(0);
-        matter.setName(matter.getId());
+        matter.setName(userDto.getActualName());
         matter.setParentId("private");
         matter.setCreateTime(new Date().getTime());
         matter.setStatus(1);
         matter.setModifiedTime(new Date().getTime());
         matterService.save(matter);
+        UserRoles userRoles=new UserRoles();
+        userRoles.setUserId(userDto.getId());
+        userRoles.setRoleId(0);
+        userRolesService.save(userRoles);
         return ApiResult.SUCCESS(userDto);
     }
     @ApiOperation("上传头像")

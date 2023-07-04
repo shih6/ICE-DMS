@@ -76,6 +76,17 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
         return list;
     }
     @Override
+    public Page<MatterDTO> listSearch(Page page,String matterName){
+        User user =(User) SecurityUtils.getSubject().getPrincipal();
+        Page<MatterDTO> list = baseMapper.listSearch(page,matterName, user.getId(), 31);
+        list.getRecords().forEach(i->{
+            if(i.getSubMatters()==null){
+                i.setSubMatters(new ArrayList<>());
+            }
+        });
+        return list;
+    }
+    @Override
     public MatterDTO getMatterDtoById(String matterId, String userId) {
         MatterDTO dto=baseMapper.getMatterDtoById(matterId, userId, 31);
         if(dto.getSubMatters()==null){

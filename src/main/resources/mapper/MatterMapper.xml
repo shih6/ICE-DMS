@@ -59,6 +59,29 @@
                         <if test="type!=null">
                             and m.type=#{type}
                         </if>
-                     ) a where a.action>0 group by id
+                     ) a where a.action>0
+                         group by id
+    </select>
+    <select id="listSearch" resultType="com.shih.icecms.dto.MatterDTO">
+        select * from(
+        SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,
+        u.actual_name as creator_name,
+        CASE WHEN m.creator=#{userId} THEN #{fullAction} ELSE mp.action END AS `action`
+        FROM matter m
+        left JOIN matter_permissions mp ON m.id = mp.matter_id
+        LEFT JOIN user_roles ur ON mp.role_id = ur.role_id AND ur.user_id = #{userId} AND mp.role_type = 0
+        LEFT JOIN `user` u on u.id=m.creator
+        WHERE
+        -- user权限
+        ((mp.role_id = #{userId} AND mp.role_type = 1 )
+        -- role权限
+        OR (mp.role_type = 0 AND ur.user_id = #{userId} )
+        -- creator权限
+        OR m.creator=#{userId})
+        ) a where a.action>0
+        <if test="matterName!=null">
+            and name like concat('%',#{matterName},'%')
+        </if>
+        group by id
     </select>
 </mapper>

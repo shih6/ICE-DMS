@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shih.icecms.dto.ApiResult;
 import com.shih.icecms.dto.MatterDTO;
+import com.shih.icecms.dto.MatterSearchDTO;
 import com.shih.icecms.entity.FileHistory;
 import com.shih.icecms.entity.Matter;
 import com.shih.icecms.entity.MatterPermissions;
@@ -220,5 +221,11 @@ public class MatterController {
         User user =(User) SecurityUtils.getSubject().getPrincipal();
         MatterDTO matterDTO=matterService.getTree("root", user.getId());
         return ApiResult.SUCCESS(matterDTO);
+    }
+    @ApiOperation(value = "搜索")
+    @PostMapping("/matter/search")
+    public ApiResult search(@RequestBody MatterSearchDTO dto){
+        Page<MatterDTO> matterDTOPage = matterService.listSearch(Page.of(dto.getCurrent(), dto.getPageSize()), dto.getName());
+        return ApiResult.SUCCESS(matterDTOPage);
     }
 }

@@ -16,6 +16,7 @@ import java.util.List;
 public interface MatterMapper extends BaseMapper<Matter> {
     Page<MatterDTO> list(Page<MatterDTO> page, String matterId, String userId, int fullAction);
     List<MatterDTO> list(String matterId, String userId, Integer type, int fullAction);
+    Page<MatterDTO> listSearch(Page<MatterDTO> page,String matterName, String userId, int fullAction);
     MatterDTO getMatterDtoById(String matterId,String userId, int fullAction);
 }
 

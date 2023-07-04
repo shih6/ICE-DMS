@@ -17,6 +17,7 @@ import java.util.List;
 */
 public interface MatterService extends IService<Matter> {
     List<MatterDTO> list(String matterId, String userId,Integer type);
+    Page<MatterDTO> listSearch(Page page,String matterName);
     Page<MatterDTO> listByPage(String matterId, String userId, int pageNum, int pageSize);
     MatterDTO getMatterDtoById(String matterId,String userId);
     MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId);
