@@ -3,7 +3,9 @@ package com.shih.icecms.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.shih.icecms.dto.MatterDTO;
+import com.shih.icecms.entity.FileHistory;
 import com.shih.icecms.entity.Matter;
+import com.shih.icecms.entity.User;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,4 +26,5 @@ public interface MatterService extends IService<Matter> {
     Boolean deleteMatter(String matterId);
     MatterDTO getTree(String matterId,String userId);
     void getPath(String matterId, @NotNull List<String> outPut);
+    void saveOrUpdateMatter(String userId, FileHistory newHistory, Matter matter, Integer version);
 }

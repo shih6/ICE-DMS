@@ -14,6 +14,7 @@ import com.shih.icecms.service.FileHistoryService;
 import com.shih.icecms.service.MatterService;
 import com.shih.icecms.utils.CommonUtil;
 import com.shih.icecms.utils.MinioUtil;
+import io.minio.StatObjectResponse;
 import io.minio.errors.MinioException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -83,27 +84,25 @@ public class OnlyOfficeController {
                         eq(FileHistory::getMatterId,matter.getId()).
                         orderBy(true,false,FileHistory::getCreated).
                         last("limit 1"));
-                Integer version= fileHistory.getVersion();
-
-                // 保存文档内容
-                FileHistory newHistory=new FileHistory();
-                newHistory.setCreated(new Date());
-                if(track.getUsers()!=null&&track.getUsers().size()>0){
-                    newHistory.setUserId(track.getUsers().get(0));
+                Integer currentVersion= fileHistory.getVersion();
+                String userId=null;
+                if(track.getUsers()!=null&&track.getUsers().size()>0) {
+                    userId = track.getUsers().get(0);
                 }
-                newHistory.setMatterId(matter.getId());
-                newHistory.setDocKey(UUID.randomUUID().toString());
-                newHistory.setVersion(version+1);
-                newHistory.setObjectName(matter.getParentId()+"/"+ CommonUtil.getFileNameWithOutExt(matter.getName()) +"-"+newHistory.getVersion()+
-                        CommonUtil.getFilenameExtensionWithDot(matter.getName()));
-                newHistory.setServerVersion(track.getHistory().getServerVersion());
-                // 保存changes.zip
-                String objectName=newHistory.getObjectName()+"changes.zip";
-                minioUtil.upload(new URL(track.getChangesurl()), objectName);
-                newHistory.setChangesObjectName(objectName);
 
-                minioUtil.upload(new URL(track.getUrl()), newHistory.getObjectName());
-                fileHistoryService.save(newHistory);
+                // 保存 FileHistory 文档内容
+                FileHistory newHistory=new FileHistory();
+                StatObjectResponse statObjectResponse = minioUtil.upload(new URL(track.getUrl()), newHistory.getObjectName());
+                matter.setSize(statObjectResponse.size());
+                matterService.saveOrUpdateMatter(userId,newHistory,matter,currentVersion+1);
+
+                // 保存changes.zip
+                minioUtil.upload(new URL(track.getChangesurl()), newHistory.getObjectName()+"changes.zip");
+                newHistory.setServerVersion(track.getHistory().getServerVersion());
+                newHistory.setChangesObjectName(newHistory.getObjectName()+"changes.zip");
+                fileHistoryService.updateById(fileHistory);
+
+
                 for (ChangesHistory change:track.getHistory().getChanges()) {
                     FileChanges fileChanges=new FileChanges();
                     fileChanges.setFileHistoryId(newHistory.getId());

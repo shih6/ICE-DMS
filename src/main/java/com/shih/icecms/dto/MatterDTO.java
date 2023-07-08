@@ -19,8 +19,8 @@ public class MatterDTO {
     private Long modifiedTime;
     private String creator;
     private Integer status;
+    private Long size;
     // 新增字段
-    private Integer size;
     private Integer action;
     private String creatorName;
     private List<MatterDTO> subMatters;

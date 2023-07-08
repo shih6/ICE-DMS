@@ -109,8 +109,8 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
             // 能否覆盖此文件
             matterPermissionsService.checkMatterPermission(matter.getId(), ActionEnum.Edit);
             List<FileHistory> fileHistoryList=fileHistoryService.getFileHistoryByMatterId(matter.getId());
-            newHistory.setVersion(fileHistoryList.get(0).getVersion()+1);
-            saveMatter(user, newHistory, matter);
+            matter.setSize(multipartFile.getSize());
+            saveOrUpdateMatter(user.getId(), newHistory, matter,fileHistoryList.get(0).getVersion()+1);
             minioUtil.upload(multipartFile, newHistory.getObjectName());
         }else{
             matter=new Matter();
@@ -119,8 +119,8 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
             matter.setName(multipartFile.getOriginalFilename());
             matter.setParentId(parentMatterId);
             matter.setCreateTime(new Date().getTime());
-            newHistory.setVersion(1);
-            saveMatter(user, newHistory, matter);
+            matter.setSize(multipartFile.getSize());
+            saveOrUpdateMatter(user.getId(), newHistory, matter,1);
             minioUtil.upload(multipartFile, newHistory.getObjectName());
         }
         MatterDTO matterDTO = getMatterDtoById(matter.getId(), user.getId());
@@ -128,10 +128,11 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
         return matterDTO;
     }
     @Transactional
-    public void saveMatter(User user, FileHistory newHistory, Matter matter) {
+    public void saveOrUpdateMatter(String userId, FileHistory newHistory, Matter matter,Integer version) {
         matter.setModifiedTime(new Date().getTime());
         saveOrUpdate(matter);
-        newHistory.setUserId(user.getId());
+        newHistory.setVersion(version);
+        newHistory.setUserId(userId);
         newHistory.setCreated(new Date());
         newHistory.setDocKey(UUID.randomUUID().toString());
         newHistory.setMatterId(matter.getId());
@@ -142,7 +143,7 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
     @Override
     @Transactional
     public Boolean deleteMatter(String matterId){
-        Matter matter = getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId, matterId).eq(Matter::getType,1));
+        Matter matter = getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId, matterId));
         if(matter!=null){
             matterPermissionsService.checkMatterPermission(matterId, ActionEnum.Delete);
             var fileHistorys=fileHistoryService.list(new LambdaQueryWrapper<FileHistory>().eq(FileHistory::getMatterId,matter.getId()));

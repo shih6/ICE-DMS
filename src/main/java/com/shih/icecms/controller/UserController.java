@@ -42,6 +42,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @RestController
 @Api(value = "登录",tags = {"登录"})
@@ -95,11 +96,12 @@ public class UserController {
     }
 
     @ApiOperation("钉钉鉴权登录V2")
-    @GetMapping( value = "/login/auth")
+    @GetMapping( value = "/user/dingtalkAuth")
     public ApiResult qrLogin(@ApiParam("钉钉给的AuthCode")@RequestParam(value = "auth_code")String authCode) {
         String rId=usersService.getRId(authCode);
         User user =usersService.getOne(new QueryWrapper<User>().lambda().eq(User::getDingtalkId,rId));
         if(user !=null){
+            response.setHeader("Authorization", JwtUtil.createJWT(user.getUsername(),"qrlogin"));
             return ApiResult.SUCCESS(user);
         }else{
             return ApiResult.ERROR("未绑定账号，请使用账号密码登录");
@@ -122,8 +124,8 @@ public class UserController {
     @GetMapping("/user/list")
     public ApiResult<List<User>> list(@RequestParam(required = false,defaultValue = "1") Integer status){
         User user =shiroUtil.getLoginUser();
-        List<User> userList =usersService.list(new QueryWrapper<User>().lambda().eq(status!=-1,User::getStatus,status));
-        return ApiResult.SUCCESS(userList);
+        List<User> userList =usersService.list(new QueryWrapper<User>().lambda().eq(status!=-1,User::getStatus,status).orderBy(true,false,User::getIsAdmin));
+        return ApiResult.SUCCESS(userList.stream().filter(p->!p.getId().equals(user.getId())).collect(Collectors.toList()));
     }
     @ApiOperation("账号状态修改")
     @PostMapping("/user/status")
@@ -179,7 +181,7 @@ public class UserController {
             try {
                 minioUtil.delete(user.getAvatar());
             } catch (MinioException | RuntimeException | IOException | NoSuchAlgorithmException | InvalidKeyException e) {
-                log.error(e.getMessage());
+                log.error("删除头像失败"+e.getMessage());
             }
         }
         String prefix="avatar/";

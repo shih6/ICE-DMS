@@ -183,6 +183,10 @@ public class MatterController {
     @ApiOperation(value = "文件删除")
     @DeleteMapping("/matter/delete")
     public ApiResult delete(@RequestParam String matterId)   {
+        // 检查是否含有文件或子文件夹
+        if (matterService.count(new LambdaQueryWrapper<Matter>().eq(Matter::getParentId,matterId))>0) {
+            return ApiResult.ERROR("文件夹内含有文件，删除失败");
+        }
         if(matterService.deleteMatter(matterId)){
             return ApiResult.SUCCESS("删除成功");
         }else{

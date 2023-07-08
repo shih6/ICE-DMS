@@ -57,7 +57,16 @@ public class User implements Serializable {
      * 
      */
     private String dingtalkId;
+
+    /**
+     *
+     */
     private String avatar;
+
+    /**
+     *
+     */
+    private Integer isAdmin;
 
     private static final long serialVersionUID = 1L;
 

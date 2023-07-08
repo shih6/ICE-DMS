@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.servlet.Filter;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Configuration
@@ -33,25 +34,24 @@ public class ShiroConfig {
          * 自定义url规则
          * http://shiro.apache.org/web.html#urls-
          */
-        Map<String, String> filterRuleMap = new HashMap<>();
+        Map<String, String> filterRuleMap = new LinkedHashMap<>();
         filterRuleMap.put("/user/login", "anon");
-        // 所有请求通过我们自己的JWT Filter
-        filterRuleMap.put("/**", "jwt");
-        // 访问401和404页面不通过我们的Filter
-        //开放API文档接口
+        filterRuleMap.put("/user/dingtalkAuth","anon");
         filterRuleMap.put("/matter/downloadByToken/**","anon");
         filterRuleMap.put("/onlyoffice/**","anon");
+        filterRuleMap.put("/avatar/**","anon");
+        filterRuleMap.put("/static/**","anon");
+
+        //开放API文档接口
         filterRuleMap.put("/swagger-ui.html", "anon");
         filterRuleMap.put("/webjars/**","anon");
         filterRuleMap.put("/swagger-resources/**","anon");
         filterRuleMap.put("/v2/**","anon");
-        filterRuleMap.put("/static/**","anon");
-
-
-        filterRuleMap.put("/avatar/upload","jwt");
-        filterRuleMap.put("/avatar/**","anon");
         //sql监控
         filterRuleMap.put("/druid/**","anon");
+        // 所有请求通过JWT Filter
+        filterRuleMap.put("/**", "jwt");
+        filterRuleMap.put("/avatar/upload","jwt");
         factoryBean.setFilterChainDefinitionMap(filterRuleMap);
         return factoryBean;
     }

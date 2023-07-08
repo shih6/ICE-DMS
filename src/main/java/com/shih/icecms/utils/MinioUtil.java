@@ -6,11 +6,11 @@ import io.minio.errors.MinioException;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import io.minio.messages.Item;
+import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.FastByteArrayOutputStream;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,6 +19,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -99,30 +100,33 @@ public class MinioUtil {
      * @param url 文件路径
      * @return Boolean
      */
-    public String upload(URL url, String objectName){
+    public StatObjectResponse upload(URL url, String objectName){
+        ObjectWriteResponse response;
         try {
             URLConnection urlConnection=url.openConnection();
+            @Cleanup InputStream inputStream=urlConnection.getInputStream();
             PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(prop.getBucketName()).object(objectName)
-                    .stream(urlConnection.getInputStream(),urlConnection.getContentLength(),-1).contentType(urlConnection.getContentType()).build();
+                    .stream(inputStream,urlConnection.getContentLength(),-1).contentType(urlConnection.getContentType()).build();
             //文件名称相同会覆盖
-            minioClient.putObject(objectArgs);
+            response = minioClient.putObject(objectArgs);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
-        return objectName;
+        return getObjectStatus(objectName);
     }
-    public String upload(MultipartFile file,String objectName) {
-        try {
+    public StatObjectResponse upload(MultipartFile file, String objectName) {
+        ObjectWriteResponse response;
+        try(InputStream inputStream=file.getInputStream()) {
             PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(prop.getBucketName()).object(objectName)
-                    .stream(file.getInputStream(), file.getSize(), -1).contentType(file.getContentType()).build();
+                    .stream(inputStream, file.getSize(), -1).contentType(file.getContentType()).build();
             //文件名称相同会覆盖
-            ObjectWriteResponse response=minioClient.putObject(objectArgs);
+            response = minioClient.putObject(objectArgs);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
-        return objectName;
+        return getObjectStatus(objectName);
     }
     /**
      * 预览图片
@@ -139,6 +143,15 @@ public class MinioUtil {
             e.printStackTrace();
         }
         return null;
+    }
+    public StatObjectResponse getObjectStatus(String objectName){
+        StatObjectResponse statObjectResponse;
+        try{
+            statObjectResponse=minioClient.statObject(StatObjectArgs.builder().bucket(prop.getBucketName()).object(objectName).build());
+            return statObjectResponse;
+        }catch (Exception e){
+            return null;
+        }
     }
     /**
      * 文件下载
