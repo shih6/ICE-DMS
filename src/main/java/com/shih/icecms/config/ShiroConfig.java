@@ -39,6 +39,8 @@ public class ShiroConfig {
         filterRuleMap.put("/user/dingtalkAuth","anon");
         filterRuleMap.put("/matter/downloadByToken/**","anon");
         filterRuleMap.put("/onlyoffice/**","anon");
+
+        filterRuleMap.put("/avatar/upload","jwt");
         filterRuleMap.put("/avatar/**","anon");
         filterRuleMap.put("/static/**","anon");
 
@@ -51,7 +53,6 @@ public class ShiroConfig {
         filterRuleMap.put("/druid/**","anon");
         // 所有请求通过JWT Filter
         filterRuleMap.put("/**", "jwt");
-        filterRuleMap.put("/avatar/upload","jwt");
         factoryBean.setFilterChainDefinitionMap(filterRuleMap);
         return factoryBean;
     }

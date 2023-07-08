@@ -5,23 +5,18 @@ import com.shih.icecms.dto.AccessRoleDto;
 import com.shih.icecms.dto.ApiResult;
 import com.shih.icecms.dto.MatterActionDto;
 import com.shih.icecms.entity.MatterPermissions;
-import com.shih.icecms.entity.Role;
 import com.shih.icecms.entity.User;
 import com.shih.icecms.enums.ActionEnum;
 import com.shih.icecms.service.MatterPermissionsService;
 import com.shih.icecms.service.MatterService;
-import com.shih.icecms.service.RoleService;
-import com.shih.icecms.service.UsersService;
-import com.shih.icecms.utils.ShiroUtil;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -32,8 +27,6 @@ public class  MatterPermissionController {
     @Autowired
     private MatterService matterService;
     @Autowired
-    private ShiroUtil shiroUtil;
-    @Autowired
     private MatterPermissionsService matterPermissionsService;
     @ApiOperation("添加权限")
     @PutMapping("/matter/access")
@@ -43,7 +36,7 @@ public class  MatterPermissionController {
     @ApiOperation("修改权限")
     @PostMapping("/matter/access")
     public ApiResult editPermission(@RequestBody MatterActionDto matterActionDto){
-        User user=shiroUtil.getLoginUser();
+        User user=(User) SecurityUtils.getSubject().getPrincipal();
         // 检查权限
         matterPermissionsService.checkMatterPermission(matterActionDto.getMatterId(), ActionEnum.AccessControl);
         // 检查是否存在文件
@@ -71,7 +64,7 @@ public class  MatterPermissionController {
     @ApiOperation("删除权限")
     @DeleteMapping ("/matter/access")
     public ApiResult deletePermission(@RequestParam String matterId,@RequestParam String permissionId){
-        User user=shiroUtil.getLoginUser();
+        User user=(User)SecurityUtils.getSubject().getPrincipal();
         // 检查权限
         matterPermissionsService.checkMatterPermission(matterId, ActionEnum.AccessControl);
         // 检查是否存在文件

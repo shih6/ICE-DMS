@@ -1,7 +1,5 @@
 package com.shih.icecms.controller;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shih.icecms.dto.ApiResult;
@@ -16,29 +14,22 @@ import com.shih.icecms.service.FileHistoryService;
 import com.shih.icecms.service.MatterPermissionsService;
 import com.shih.icecms.service.MatterService;
 import com.shih.icecms.service.UsersService;
-import com.shih.icecms.utils.CommonUtil;
 import com.shih.icecms.utils.JwtUtil;
 import com.shih.icecms.utils.MinioUtil;
-import com.shih.icecms.utils.ShiroUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.minio.errors.MinioException;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import jdk.jfr.Timespan;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 @RestController
@@ -49,8 +40,6 @@ public class MatterController {
     private MatterService matterService;
     @Resource
     private FileHistoryService fileHistoryService;
-    @Resource
-    private ShiroUtil shiroUtil;
     private MatterPermissionsService matterPermissionsService;
     @Resource
     private UsersService usersService;
@@ -66,7 +55,7 @@ public class MatterController {
     @ApiOperation(value = "创建文件夹")
     @PutMapping("/matter/addFolder")
     public ApiResult addFolder(@RequestParam(required = false) String parentId,@RequestParam String name){
-        User user =shiroUtil.getLoginUser();
+        User user =(User)SecurityUtils.getSubject().getPrincipal();
         if(parentId==null||parentId.equals(user.getId())){
             parentId=user.getId();
         }else{
@@ -110,7 +99,7 @@ public class MatterController {
             @ApiParam(value = "文件夹id",defaultValue = "root",example = "root") @RequestParam(required = false) String matterId,
             @ApiParam(value = "页数",defaultValue = "1",example = "1") @RequestParam(required = false,defaultValue = "1") int pageNum,
             @ApiParam(value = "单页大小",defaultValue = "100",example = "100") @RequestParam(required = false,defaultValue = "100") int pageSize){
-        User user =shiroUtil.getLoginUser();
+        User user =(User)SecurityUtils.getSubject().getPrincipal();
         if(matterId==null){
             matterId=user.getId();
         }

@@ -3,32 +3,24 @@ package com.shih.icecms.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.shih.icecms.dto.ApiResult;
-import com.shih.icecms.dto.MatterDTO;
 import com.shih.icecms.entity.Matter;
-import com.shih.icecms.entity.MatterPermissions;
 import com.shih.icecms.entity.User;
 import com.shih.icecms.entity.UserRoles;
-import com.shih.icecms.service.MatterPermissionsService;
 import com.shih.icecms.service.MatterService;
 import com.shih.icecms.service.UserRolesService;
 import com.shih.icecms.service.UsersService;
 import com.shih.icecms.utils.CommonUtil;
 import com.shih.icecms.utils.JwtUtil;
 import com.shih.icecms.utils.MinioUtil;
-import com.shih.icecms.utils.ShiroUtil;
 import io.minio.errors.MinioException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.shiro.authc.AuthenticationException;
-import org.apache.shiro.authc.ExcessiveAttemptsException;
+import org.apache.shiro.SecurityUtils;
 import org.mindrot.jbcrypt.BCrypt;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.support.atomic.RedisAtomicInteger;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,8 +46,6 @@ public class UserController {
     HttpServletResponse response;
     @Resource
     UsersService usersService;
-    @Autowired
-    private ShiroUtil shiroUtil;
     @Resource
     private MinioUtil minioUtil;
     @Resource
@@ -115,7 +105,7 @@ public class UserController {
         if (tmp!=null) {
             return ApiResult.ERROR("此账号已绑定至："+tmp.getUsername());
         }
-        User user = shiroUtil.getLoginUser();
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
         user.setDingtalkId(rId);
         usersService.updateById(user);
         return ApiResult.SUCCESS(user);
@@ -123,7 +113,7 @@ public class UserController {
     @ApiOperation("获取用户列表")
     @GetMapping("/user/list")
     public ApiResult<List<User>> list(@RequestParam(required = false,defaultValue = "1") Integer status){
-        User user =shiroUtil.getLoginUser();
+        User user =(User)SecurityUtils.getSubject().getPrincipal();
         List<User> userList =usersService.list(new QueryWrapper<User>().lambda().eq(status!=-1,User::getStatus,status).orderBy(true,false,User::getIsAdmin));
         return ApiResult.SUCCESS(userList.stream().filter(p->!p.getId().equals(user.getId())).collect(Collectors.toList()));
     }
@@ -176,20 +166,20 @@ public class UserController {
     @ApiOperation("上传头像")
     @PostMapping("/avatar/upload")
     public ApiResult uploadAvatar(@RequestParam(value = "file") MultipartFile multipartFile){
-        User user=shiroUtil.getLoginUser();
+        final String prefix="avatar/";
+        User user=(User)SecurityUtils.getSubject().getPrincipal();
         if(org.apache.shiro.util.StringUtils.hasText(user.getAvatar())){
             try {
-                minioUtil.delete(user.getAvatar());
+                minioUtil.delete(prefix+user.getAvatar());
             } catch (MinioException | RuntimeException | IOException | NoSuchAlgorithmException | InvalidKeyException e) {
-                log.error("删除头像失败"+e.getMessage());
+                log.error("删除头像失败 objectName"+prefix+user.getAvatar()+"  "+e.getMessage());
             }
         }
-        String prefix="avatar/";
-        String objectName=user.getId()+ CommonUtil.getFilenameExtensionWithDot(multipartFile.getOriginalFilename());
-        minioUtil.upload(multipartFile, prefix+objectName);
-        user.setAvatar(objectName);
+        String avatarName=user.getId()+ CommonUtil.getFilenameExtensionWithDot(multipartFile.getOriginalFilename());
+        minioUtil.upload(multipartFile, prefix+avatarName);
+        user.setAvatar(avatarName);
         usersService.updateById(user);
-        return ApiResult.SUCCESS(objectName);
+        return ApiResult.SUCCESS(user);
     }
     @ApiOperation("下载头像")
     @GetMapping("/avatar/{objectName}")
