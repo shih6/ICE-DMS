@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.shih.icecms.mapper.SystemEnumMapper">
+<mapper namespace="com.shih.icedms.mapper.SystemEnumMapper">
 
-    <resultMap id="BaseResultMap" type="com.shih.icecms.entity.SystemEnum">
+    <resultMap id="BaseResultMap" type="com.shih.icedms.entity.SystemEnum">
             <id property="id" column="id" jdbcType="INTEGER"/>
             <result property="objectName" column="object_name" jdbcType="VARCHAR"/>
             <result property="key" column="key" jdbcType="INTEGER"/>

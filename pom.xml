@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.shih</groupId>
-	<artifactId>ice-cms</artifactId>
+	<artifactId>ice-dms</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>ICE CMS</name>
-	<description>ICE CMS</description>
+	<name>ICE DMS</name>
+	<description>ICE DMS</description>
 	<properties>
 		<java.version>11</java.version>
 	</properties>

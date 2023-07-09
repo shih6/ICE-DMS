@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.shih.icecms.mapper.FileHistoryMapper">
+<mapper namespace="com.shih.icedms.mapper.FileHistoryMapper">
 
-    <resultMap id="BaseResultMap" type="com.shih.icecms.entity.FileHistory">
+    <resultMap id="BaseResultMap" type="com.shih.icedms.entity.FileHistory">
             <id property="id" column="id" jdbcType="INTEGER"/>
             <result property="matterId" column="matter_id" jdbcType="VARCHAR"/>
             <result property="docKey" column="doc_key" jdbcType="VARCHAR"/>
