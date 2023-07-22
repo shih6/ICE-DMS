@@ -20,7 +20,7 @@ import java.util.Map;
 public class ShiroConfig {
     @Autowired
     MyHashedCredentialsMatcher myHashedCredentialsMatcher;
-    @Bean("shiroFilter")
+    @Bean("shiroFilterFactoryBean")
     public ShiroFilterFactoryBean shiroFilterFactoryBean(DefaultWebSecurityManager securityManager) {
         ShiroFilterFactoryBean factoryBean = new ShiroFilterFactoryBean();
 
@@ -37,6 +37,8 @@ public class ShiroConfig {
         Map<String, String> filterRuleMap = new LinkedHashMap<>();
         filterRuleMap.put("/user/login", "anon");
         filterRuleMap.put("/user/dingtalkAuth","anon");
+        filterRuleMap.put("/user/login/**", "anon");
+        filterRuleMap.put("/user/dingtalkAuth/**","anon");
         filterRuleMap.put("/matter/downloadByToken/**","anon");
         filterRuleMap.put("/onlyoffice/**","anon");
 

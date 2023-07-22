@@ -120,7 +120,14 @@ public class UserController {
     @ApiOperation("账号状态修改")
     @PostMapping("/user/status")
     public ApiResult userStatus(@RequestBody User userDto){
+        User user =(User)SecurityUtils.getSubject().getPrincipal();
         User one = usersService.getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, userDto.getUsername()));
+        if(user.getIsAdmin()!=1){
+            if(!one.getId().equals(user.getId())){
+                return ApiResult.ERROR("权限不足");
+            }
+        }
+
         if(one!=null&&!one.getId().equals(userDto.getId())){
             return ApiResult.ERROR("用户名不能重复");
         }

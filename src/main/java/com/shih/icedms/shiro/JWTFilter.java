@@ -52,6 +52,7 @@ public class JWTFilter extends BasicHttpAuthenticationFilter {
         try {
             //2. 如果客户端没有携带token，拦下请求
             if(null==token||"".equals(token)){
+                log.info(((HttpServletRequest) request).getRequestURI()+"：没有携带token 拦截请求");
                 throw new AuthenticationException("未登录");
             }
             //3. 如果有，对进行进行token验证
