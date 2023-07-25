@@ -4,7 +4,7 @@ spring:
     static-path-pattern: /static/**
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3307/ice-cms?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8
+    url: jdbc:mysql://127.0.0.1:3307/icedms?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8
     username: root
     password: p@ssw0rd
     type: com.alibaba.druid.pool.DruidDataSource #Druid类型
@@ -33,12 +33,13 @@ spring:
     multipart:
       max-file-size: 4GB
       max-request-size: 4GB
-
+server:
+  port: 8080
 logging:
   level:
     com.shih: info
-#  file:
-#    path: e:/wwwroot/log1  #日志保存路径
+  file:
+    path: e:/wwwroot/log1  #日志保存路径
 minio:
   endpoint: ${setting.minioServerHost} #Minio服务所在地址
   bucketName: tulaoda #存储桶名称
