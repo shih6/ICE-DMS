@@ -96,7 +96,7 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
     }
     @Override
     @Transactional
-    public MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId){
+    public MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId) throws Exception {
         User user =(User) SecurityUtils.getSubject().getPrincipal();
         if(!StringUtils.hasText(parentMatterId)){
             parentMatterId = user.getId();

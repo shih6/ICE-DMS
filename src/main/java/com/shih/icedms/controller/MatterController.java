@@ -116,8 +116,13 @@ public class MatterController {
     @PostMapping("/matter/add")
     @ApiOperation(value = "上传文件")
     public ApiResult upload(@RequestParam(value = "file") MultipartFile multipartFile, @RequestParam(required = false,value = "matterId") String parentMatterId) {
-        MatterDTO matterDTO=matterService.uploadFile(multipartFile,parentMatterId);
-        return ApiResult.SUCCESS(matterDTO);
+        try{
+            MatterDTO matterDTO=matterService.uploadFile(multipartFile,parentMatterId);
+            return ApiResult.SUCCESS(matterDTO);
+        }catch (Exception e){
+            log.error(e.getMessage());
+            return ApiResult.ERROR("存储服务器异常");
+        }
     }
     @ApiOperation(value = "文件下载")
     @RequestMapping("/matter/download")

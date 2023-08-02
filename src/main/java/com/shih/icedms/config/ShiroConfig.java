@@ -1,4 +1,4 @@
-package com.shih.icecms.config;
+package com.shih.icedms.config;
 
 import com.shih.icedms.shiro.JWTFilter;
 import com.shih.icedms.shiro.MyHashedCredentialsMatcher;

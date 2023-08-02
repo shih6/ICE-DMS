@@ -12,7 +12,7 @@ import com.shih.icedms.service.UsersService;
 import com.shih.icedms.utils.CommonUtil;
 import com.shih.icedms.utils.JwtUtil;
 import com.shih.icedms.utils.MinioUtil;
-import io.minio.errors.MinioException;
+import io.minio.errors.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -172,7 +172,7 @@ public class UserController {
     }
     @ApiOperation("上传头像")
     @PostMapping("/avatar/upload")
-    public ApiResult uploadAvatar(@RequestParam(value = "file") MultipartFile multipartFile){
+    public ApiResult uploadAvatar(@RequestParam(value = "file") MultipartFile multipartFile) throws Exception {
         final String prefix="avatar/";
         User user=(User)SecurityUtils.getSubject().getPrincipal();
         if(org.apache.shiro.util.StringUtils.hasText(user.getAvatar())){
@@ -192,6 +192,10 @@ public class UserController {
     @GetMapping("/avatar/{objectName}")
     public void downloadAvatar(@PathVariable("objectName") String objectName) throws MinioException, IOException {
         String prefix="avatar/";
-        minioUtil.download(prefix+objectName, response);
+        try{
+            minioUtil.download(prefix+objectName, response);
+        }catch (Exception e){
+            // 头像不存在
+        }
     }
 }

@@ -20,7 +20,7 @@ public interface MatterService extends IService<Matter> {
     Page<MatterDTO> listSearch(Page page,String matterName);
     Page<MatterDTO> listByPage(String matterId, String userId, int pageNum, int pageSize);
     MatterDTO getMatterDtoById(String matterId,String userId);
-    MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId);
+    MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId) throws Exception;
     Boolean deleteMatter(String matterId);
     MatterDTO getTree(String matterId,String userId);
     void getPath(String matterId, @NotNull List<String> outPut);
