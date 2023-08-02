@@ -115,14 +115,14 @@ public class MinioUtil {
         }
         return getObjectStatus(objectName);
     }
-    public StatObjectResponse upload(MultipartFile file, String objectName) throws Exception {
+    public StatObjectResponse upload(MultipartFile file, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         ObjectWriteResponse response;
         try(InputStream inputStream=file.getInputStream()) {
             PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(prop.getBucketName()).object(objectName)
                     .stream(inputStream, file.getSize(), -1).contentType(file.getContentType()).build();
             //文件名称相同会覆盖
             response = minioClient.putObject(objectArgs);
-        }catch (Exception e){
+        }catch (IOException e){
             throw e;
         }
         return getObjectStatus(objectName);

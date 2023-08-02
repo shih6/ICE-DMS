@@ -14,7 +14,7 @@ import com.shih.icedms.service.MatterPermissionsService;
 import com.shih.icedms.service.MatterService;
 import com.shih.icedms.utils.CommonUtil;
 import com.shih.icedms.utils.MinioUtil;
-import io.minio.errors.MinioException;
+import io.minio.errors.*;
 import org.apache.shiro.SecurityUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,7 +96,7 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
     }
     @Override
     @Transactional
-    public MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId) throws Exception {
+    public MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
         User user =(User) SecurityUtils.getSubject().getPrincipal();
         if(!StringUtils.hasText(parentMatterId)){
             parentMatterId = user.getId();

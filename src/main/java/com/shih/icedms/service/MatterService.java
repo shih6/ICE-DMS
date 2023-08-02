@@ -5,9 +5,13 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.shih.icedms.dto.MatterDTO;
 import com.shih.icedms.entity.FileHistory;
 import com.shih.icedms.entity.Matter;
+import io.minio.errors.*;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 /**
@@ -20,7 +24,7 @@ public interface MatterService extends IService<Matter> {
     Page<MatterDTO> listSearch(Page page,String matterName);
     Page<MatterDTO> listByPage(String matterId, String userId, int pageNum, int pageSize);
     MatterDTO getMatterDtoById(String matterId,String userId);
-    MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId) throws Exception;
+    MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException;
     Boolean deleteMatter(String matterId);
     MatterDTO getTree(String matterId,String userId);
     void getPath(String matterId, @NotNull List<String> outPut);
