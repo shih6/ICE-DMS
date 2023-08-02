@@ -4,7 +4,7 @@ spring:
     static-path-pattern: /static/**
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3307/ice-cms?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8
+    url: jdbc:mysql://127.0.0.1:3307/icedms?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8
     username: root
     password: p@ssw0rd
     type: com.alibaba.druid.pool.DruidDataSource #Druid类型
@@ -33,22 +33,30 @@ spring:
     multipart:
       max-file-size: 4GB
       max-request-size: 4GB
-
+server:
+  port: 8080
 logging:
   level:
-    root: debug
-    com.shih: debug
-#  file:
-#    path: e:/wwwroot/log1  #日志保存路径
+    com.shih: info
+  file:
+    path: e:/wwwroot/log1  #日志保存路径
 minio:
-  endpoint: http://192.168.0.112:9000 #Minio服务所在地址
+  endpoint: ${setting.minioServerHost} #Minio服务所在地址
   bucketName: tulaoda #存储桶名称
-  accessKey: WHuOnmrpKpH1xuZ6 #访问的key
-  secretKey: iKLKkPdVAPVcNanYv2c60wbnxT4LP5Co #访问的秘钥
+  accessKey: 1OvzPcDvOey2RVtozHdv #访问的key
+  secretKey: lHcEJOzUdjB8v04eOm7airrq7cqlSn7OUanovKDu #访问的秘钥
 shiro:
   web:
     enabled: true
   enabled: true
+
+
+setting:
+  documentServer:
+    host: http://127.0.0.1:9080
+    fileStorageServerHost: http://172.22.240.1:8080
+  minioServerHost: http://127.0.0.1:9000
+  serverHost: http://host.docker.internal:8080
 
 dingtalk:
   AgentId: 1929550759

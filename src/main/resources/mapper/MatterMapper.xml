@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.shih.icecms.mapper.MatterMapper">
+<mapper namespace="com.shih.icedms.mapper.MatterMapper">
 
-    <resultMap id="BaseResultMap" type="com.shih.icecms.entity.Matter">
+    <resultMap id="BaseResultMap" type="com.shih.icedms.entity.Matter">
             <id property="id" column="id" jdbcType="VARCHAR"/>
             <result property="parentId" column="parent_id" jdbcType="VARCHAR"/>
             <result property="name" column="name" jdbcType="VARCHAR"/>
@@ -13,30 +13,76 @@
             <result property="modifiedTime" column="modified_time" jdbcType="BIGINT"/>
             <result property="creator" column="creator" jdbcType="VARCHAR"/>
             <result property="status" column="status" jdbcType="INTEGER"/>
+            <result property="size" column="size" jdbcType="BIGINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,parent_id,name,
         type,create_time,modified_time,
-        creator,status
+        creator,status,size
     </sql>
 <!--    case when中的结果似乎无法在where中使用 套一个查询 TODO 分页无效-->
-    <select id="listByPage" resultType="com.shih.icecms.dto.MatterDTO">
-    select * from(
-         SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,
-                u.actual_name as creator_name,
-                CASE WHEN m.creator=#{userId} THEN #{fullAction} ELSE mp.action END AS `action`
-         FROM matter m
-                  left JOIN matter_permissions mp ON m.id = mp.matter_id
-                  LEFT JOIN user_roles ur ON mp.role_id = ur.role_id AND ur.user_id = #{userId} AND mp.role_type = 0
-                  LEFT JOIN `user` u on u.id=m.creator
-         WHERE
+    <select id="getMatterDtoById" resultType="com.shih.icedms.dto.MatterDTO">
+        SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,m.size,
+               u.actual_name as creator_name,
+               CASE WHEN m.creator=#{userId} THEN #{fullAction} ELSE mp.action END AS `action`
+        FROM matter m
+                 left JOIN matter_permissions mp ON m.id = mp.matter_id
+                 LEFT JOIN user_roles ur ON mp.role_id = ur.role_id AND ur.user_id = #{userId} AND mp.role_type = 0
+                 LEFT JOIN `user` u on u.id=m.creator
+        WHERE
+          -- user权限
+            ((mp.role_id = #{userId} AND mp.role_type = 1 )
+                -- role权限
+                OR (mp.role_type = 0 AND ur.user_id = #{userId} )
+                -- creator权限
+                OR m.creator=#{userId}) and m.id=#{matterId} group by id
+    </select>
+    <select id="list" resultType="com.shih.icedms.dto.MatterDTO">
+        select * from(
+                         SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,m.size,
+                                u.actual_name as creator_name,
+                                CASE WHEN m.creator=#{userId} THEN #{fullAction} ELSE mp.action END AS `action`
+                         FROM matter m
+                                  left JOIN matter_permissions mp ON m.id = mp.matter_id
+                                  LEFT JOIN user_roles ur ON mp.role_id = ur.role_id AND ur.user_id = #{userId} AND mp.role_type = 0
+                                  LEFT JOIN `user` u on u.id=m.creator
+                         WHERE
+                           -- user权限
+                             ((mp.role_id = #{userId} AND mp.role_type = 1 )
+                                 -- role权限
+                                 OR (mp.role_type = 0 AND ur.user_id = #{userId} )
+                                 -- creator权限
+                                 OR m.creator=#{userId})
+                         <if test="matterId!=null">
+                             and m.parent_id=#{matterId}
+                         </if>
+                        <if test="type!=null">
+                            and m.type=#{type}
+                        </if>
+                     ) a where a.action>0
+                         group by id
+    </select>
+    <select id="listSearch" resultType="com.shih.icedms.dto.MatterDTO">
+        select * from(
+        SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,m.size,
+        u.actual_name as creator_name,
+        CASE WHEN m.creator=#{userId} THEN #{fullAction} ELSE mp.action END AS `action`
+        FROM matter m
+        left JOIN matter_permissions mp ON m.id = mp.matter_id
+        LEFT JOIN user_roles ur ON mp.role_id = ur.role_id AND ur.user_id = #{userId} AND mp.role_type = 0
+        LEFT JOIN `user` u on u.id=m.creator
+        WHERE
         -- user权限
         ((mp.role_id = #{userId} AND mp.role_type = 1 )
         -- role权限
         OR (mp.role_type = 0 AND ur.user_id = #{userId} )
         -- creator权限
-        OR m.creator=#{userId}) and m.parent_id=#{matterId}
-     ) a where a.action>0
+        OR m.creator=#{userId})
+        ) a where a.action>0
+        <if test="matterName!=null">
+            and name like concat('%',#{matterName},'%')
+        </if>
+        group by id
     </select>
 </mapper>

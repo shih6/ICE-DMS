@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.shih.icecms.mapper.MatterPermissionsMapper">
+<mapper namespace="com.shih.icedms.mapper.MatterPermissionsMapper">
 
-    <resultMap id="BaseResultMap" type="com.shih.icecms.entity.MatterPermissions">
+    <resultMap id="BaseResultMap" type="com.shih.icedms.entity.MatterPermissions">
             <id property="id" column="id" jdbcType="VARCHAR"/>
             <result property="matterId" column="matter_id" jdbcType="VARCHAR"/>
             <result property="roleId" column="role_id" jdbcType="VARCHAR"/>
@@ -16,4 +16,15 @@
         id,matter_id,role_id,
         role_type,`action`
     </sql>
+    <select id="accessRoleListByMatterId" resultType="com.shih.icedms.dto.AccessRoleDto">
+        select mp.id as 'permissionId',mp.matter_id as 'matterId',mp.role_id as 'roleId',mp.role_type as 'roleType',
+                mp.action as 'action',case  when mp.role_type=0 then r.role_name else u.actual_name end as 'roleName',
+                case when mp.role_type=0 then r.role_desc else u.username end as 'roleDesc',u.avatar
+        from matter_permissions mp
+                 left join `role` r on r.id = mp.role_id and mp.role_type=0
+                 left join `user` u on u.id = mp.role_id and mp.role_type=1
+        <if test="matterId!=null">
+            where mp.matter_id=#{matterId}
+        </if>
+    </select>
 </mapper>
