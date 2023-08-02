@@ -2,7 +2,7 @@ package com.shih.icedms.utils;
 
 import com.shih.icedms.config.MinioConfig;
 import io.minio.*;
-import io.minio.errors.MinioException;
+import io.minio.errors.*;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import io.minio.messages.Item;
@@ -115,16 +115,15 @@ public class MinioUtil {
         }
         return getObjectStatus(objectName);
     }
-    public StatObjectResponse upload(MultipartFile file, String objectName) {
+    public StatObjectResponse upload(MultipartFile file, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         ObjectWriteResponse response;
         try(InputStream inputStream=file.getInputStream()) {
             PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(prop.getBucketName()).object(objectName)
                     .stream(inputStream, file.getSize(), -1).contentType(file.getContentType()).build();
             //文件名称相同会覆盖
             response = minioClient.putObject(objectArgs);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        }catch (IOException e){
+            throw e;
         }
         return getObjectStatus(objectName);
     }

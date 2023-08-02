@@ -18,7 +18,7 @@ import com.shih.icedms.utils.JwtUtil;
 import com.shih.icedms.utils.MinioUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
-import io.minio.errors.MinioException;
+import io.minio.errors.*;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +30,8 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 @RestController
@@ -116,8 +118,18 @@ public class MatterController {
     @PostMapping("/matter/add")
     @ApiOperation(value = "上传文件")
     public ApiResult upload(@RequestParam(value = "file") MultipartFile multipartFile, @RequestParam(required = false,value = "matterId") String parentMatterId) {
-        MatterDTO matterDTO=matterService.uploadFile(multipartFile,parentMatterId);
-        return ApiResult.SUCCESS(matterDTO);
+        try{
+            MatterDTO matterDTO=matterService.uploadFile(multipartFile,parentMatterId);
+            return ApiResult.SUCCESS(matterDTO);
+        } catch (MinioException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidKeyException e) {
+            throw new RuntimeException(e);
+        }
     }
     @ApiOperation(value = "文件下载")
     @RequestMapping("/matter/download")
