@@ -130,7 +130,12 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
     @Transactional
     public void saveOrUpdateMatter(String userId, FileHistory newHistory, Matter matter,Integer version) {
         matter.setModifiedTime(new Date().getTime());
-        saveOrUpdate(matter);
+        try{
+            saveOrUpdate(matter);
+        }catch (Exception e){
+            log.error("插入失败:"+matter.toString());
+            throw e;
+        }
         newHistory.setVersion(version);
         newHistory.setUserId(userId);
         newHistory.setCreated(new Date());

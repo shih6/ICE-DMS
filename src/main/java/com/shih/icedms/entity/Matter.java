@@ -95,20 +95,16 @@ public class Matter implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getClass().getSimpleName());
-        sb.append(" [");
-        sb.append("Hash = ").append(hashCode());
-        sb.append(", id=").append(id);
-        sb.append(", parentId=").append(parentId);
-        sb.append(", name=").append(name);
-        sb.append(", type=").append(type);
-        sb.append(", createTime=").append(createTime);
-        sb.append(", modifiedTime=").append(modifiedTime);
-        sb.append(", creator=").append(creator);
-        sb.append(", status=").append(status);
-        sb.append(", serialVersionUID=").append(serialVersionUID);
-        sb.append("]");
-        return sb.toString();
+        return "Matter{" +
+                "id='" + id + '\'' +
+                ", parentId='" + parentId + '\'' +
+                ", name='" + name + '\'' +
+                ", type=" + type +
+                ", createTime=" + createTime +
+                ", modifiedTime=" + modifiedTime +
+                ", creator='" + creator + '\'' +
+                ", status=" + status +
+                ", size=" + size +
+                '}';
     }
 }
