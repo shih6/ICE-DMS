@@ -33,6 +33,7 @@ spring:
     multipart:
       max-file-size: 4GB
       max-request-size: 4GB
+      file-size-threshold: 500MB
 server:
   port: 8080
 logging:

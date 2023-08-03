@@ -122,13 +122,11 @@ public class MatterController {
             MatterDTO matterDTO=matterService.uploadFile(multipartFile,parentMatterId);
             return ApiResult.SUCCESS(matterDTO);
         } catch (MinioException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        } catch (InvalidKeyException e) {
-            throw new RuntimeException(e);
+            log.error(e.getMessage());
+            return ApiResult.ERROR("保存文件失败");
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeyException e) {
+            log.error(e.getMessage());
+            return ApiResult.ERROR("IOException"+e.getMessage());
         }
     }
     @ApiOperation(value = "文件下载")
