@@ -151,11 +151,25 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
         newHistory.setObjectName(objName);
         fileHistoryService.save(newHistory);
     }
+    @Transactional
+    public boolean move(String matterId,String target){
+        User user =(User) SecurityUtils.getSubject().getPrincipal();
+        matterPermissionsService.checkMatterPermission(matterId, ActionEnum.AccessControl);
+        Matter matter = getById(matterId);
+        Matter targetMatter=getById(target);
+        if(targetMatter==null||matter==null){
+            return false;
+        }
+        matter.setParentId(target);
+        updateById(matter);
+        return true;
+    }
     @Override
     @Transactional
     public Boolean deleteMatter(String matterId){
         Matter matter = getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId, matterId));
-        if(matter!=null){
+        long count = count(new LambdaQueryWrapper<Matter>().eq(Matter::getParentId, matterId));
+        if(matter!=null&&count==0){
             matterPermissionsService.checkMatterPermission(matterId, ActionEnum.Delete);
             var fileHistorys=fileHistoryService.list(new LambdaQueryWrapper<FileHistory>().eq(FileHistory::getMatterId,matter.getId()));
             for (FileHistory item:fileHistorys) {
@@ -171,6 +185,17 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
             return true;
         }
         return false;
+    }
+    @Override
+    @Transactional
+    public List<String> deleteMatters(String matterIds){
+        List<String> successList=new ArrayList<>();
+        for (String matterId : matterIds.split(",")) {
+            if(deleteMatter(matterId)){
+                successList.add(matterId);
+            }
+        }
+        return successList;
     }
     @Override
     public MatterDTO getTree(String matterId,String userId){

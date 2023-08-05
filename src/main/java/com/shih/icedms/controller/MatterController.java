@@ -192,6 +192,12 @@ public class MatterController {
             return ApiResult.ERROR("删除失败");
         }
     }
+    @ApiOperation(value = "批量删除")
+    @DeleteMapping("/matter/deletes")
+    public ApiResult deletes(@RequestParam String matterIds)   {
+        List<String> successList = matterService.deleteMatters(matterIds);
+        return ApiResult.SUCCESS(successList);
+    }
     @ApiOperation(value = "文件下载")
     @GetMapping("/downloadByObjectName")
     public void downloadByObjectName(@RequestParam String objectName, HttpServletResponse res) throws MinioException, IOException {
@@ -210,6 +216,25 @@ public class MatterController {
         }
         return ApiResult.SUCCESS();
     }
+    @ApiOperation("移动文件")
+    @PostMapping("/matter/move")
+    public ApiResult move(@RequestBody Map<String,Object> map){
+        String target= (String) map.get("target");
+        String matterIds= (String) map.get("matterIds");
+        List<String> ids= List.of(matterIds.split(","));
+        Matter targetMatter=matterService.getById(target);
+        List<String> successList=new ArrayList<>();
+        if(targetMatter==null){
+            return ApiResult.ERROR("目标文件夹不存在");
+        }
+        for (String id : ids) {
+            if(matterService.move(id, target)){
+                successList.add(id);
+            }
+        }
+        return ApiResult.SUCCESS(successList);
+    }
+
     @ApiOperation(value = "请求历史版本列表")
     @GetMapping("/matter/version")
     public ApiResult<List<FileHistory>> matterVersion(@RequestParam String matterId){
