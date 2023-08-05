@@ -15,6 +15,7 @@ import com.shih.icedms.service.MatterService;
 import com.shih.icedms.utils.CommonUtil;
 import com.shih.icedms.utils.MinioUtil;
 import io.minio.errors.*;
+import lombok.val;
 import org.apache.shiro.SecurityUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -141,8 +143,12 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
         newHistory.setCreated(new Date());
         newHistory.setDocKey(UUID.randomUUID().toString());
         newHistory.setMatterId(matter.getId());
-        newHistory.setObjectName(matter.getParentId()+"/"+matter.getId() +"-"+newHistory.getVersion()+
-                CommonUtil.getFilenameExtensionWithDot(matter.getName()));
+        val dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String yyyy_mm_dd = dateFormat.format(new Date());
+        // [2023-04-12/matterId-version-xxxx] or [2023-04-12/matterId-version-xxxx.extension]
+        String objName=yyyy_mm_dd+"/"+matter.getId()+"-"+newHistory.getVersion()+"-"+UUID.randomUUID().toString().substring(0,4) +
+                CommonUtil.getFilenameExtensionWithDot(matter.getName());
+        newHistory.setObjectName(objName);
         fileHistoryService.save(newHistory);
     }
     @Override
