@@ -193,8 +193,9 @@ public class MatterController {
         }
     }
     @ApiOperation(value = "批量删除")
-    @DeleteMapping("/matter/deletes")
-    public ApiResult deletes(@RequestParam String matterIds)   {
+    @PostMapping("/matter/deletes")
+    public ApiResult deletes(@RequestBody Map map)   {
+        String matterIds= (String) map.get("matterIds");
         List<String> successList = matterService.deleteMatters(matterIds);
         return ApiResult.SUCCESS(successList);
     }
