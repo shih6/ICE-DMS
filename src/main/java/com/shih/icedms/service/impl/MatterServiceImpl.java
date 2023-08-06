@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
 * @author 1
@@ -59,6 +60,15 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
 
     @Override
     public List<MatterDTO> list(String parentId, String userId,Integer type){
+        List<MatterDTO> list = listAll(parentId, userId, type).stream().filter(p->p.getAction()>0).collect(Collectors.toList());
+        list.forEach(i->{
+            if(i.getSubMatters()==null){
+                i.setSubMatters(new ArrayList<>());
+            }
+        });
+        return list;
+    }
+    public List<MatterDTO> listAll(String parentId, String userId,Integer type){
         List<MatterDTO> list = baseMapper.list(parentId, userId, type, 31);
         list.forEach(i->{
             if(i.getSubMatters()==null){
@@ -200,28 +210,43 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
         MatterDTO root=getMatterDtoById(matterId, userId);
         List<MatterDTO> list = list(null, userId,0);
         // 构建树结构
-        list.forEach(i->{
-            List<String> outPut=new ArrayList<>();
-            getPath(i.getId(),outPut);
+        List<MatterDTO> cacheList=listAll(null,userId,0);
+        for (int i=0;i<list.size();i++) {
+            MatterDTO item = list.get(i);
+            List<String> outPut = new ArrayList<>();
+            getPath(item, cacheList, userId, outPut);
             for (int j = 1; j < outPut.size(); j++) {
-                String parentId=outPut.get(j-1);
-                String currentId=outPut.get(j);
+                String parentId = outPut.get(j - 1);
+                String currentId = outPut.get(j);
+                // 在树中找到父节点
                 MatterDTO parentMatterDTO = root.findNode(parentId);
-                MatterDTO currentMatterDTO = getMatterDtoById(currentId, userId);
+                // 获取当前要放置的节点
+                MatterDTO currentMatterDTO = cacheList.stream().filter(p -> p.getId().equals(currentId)).findFirst().get();
+                // 如果当前的父节点无此节点则置入此节点
                 if (parentMatterDTO.getSubMatters().stream().noneMatch(p -> p.getId().equals(currentMatterDTO.getId()))) {
                     parentMatterDTO.getSubMatters().add(currentMatterDTO);
                 }
             }
-        });
+        }
         return root;
     }
-    @Override
-    public void getPath(String matterId, @NotNull List<String> outPut){
-        Matter matter=getById(matterId);
-        outPut.add(0,matter.getId());
-        Matter parentMatter=getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId,matter.getParentId()));
-        if(parentMatter!=null){
-            getPath(parentMatter.getId(), outPut);
+
+    public void getPath(MatterDTO matterDTO, List<MatterDTO> cacheList,String userId,@NotNull List<String> outPut){
+        outPut.add(0,matterDTO.getId());
+        if(matterDTO.getParentId().equals("")){
+            return;
+        }
+        MatterDTO parentMatterDto = cacheList.stream().filter(p -> {
+            return p.getId().equals(matterDTO.getParentId());
+        }).findFirst().orElse(null);
+        if(parentMatterDto==null){
+            parentMatterDto=getMatterDtoById(matterDTO.getParentId(),userId);
+            if(parentMatterDto!=null){
+                cacheList.add(parentMatterDto);
+                getPath(parentMatterDto,cacheList,userId, outPut);
+            }
+        }else{
+            getPath(parentMatterDto,cacheList,userId, outPut);
         }
     }
 }
