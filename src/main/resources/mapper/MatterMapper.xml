@@ -26,7 +26,7 @@
         select * from(
         SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,m.size,
             u.actual_name as creator_name,
-            getMatterPermission(#{userId},m.id) as `action`,m.extend_super
+        getMatterPermission(#{userId},m.id,m.creator,u.is_admin) as `action`,m.extend_super
         FROM matter m
         LEFT JOIN `user` u on u.id=m.creator
         where 1
@@ -44,7 +44,7 @@
         select * from(
         SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,m.size,
         u.actual_name as creator_name,
-        getMatterPermission(#{userId},m.id) as `action`,m.extend_super
+        getMatterPermission(#{userId},m.id,m.creator,u.is_admin) as `action`,m.extend_super
         FROM matter m
         LEFT JOIN `user` u on u.id=m.creator
         where 1
