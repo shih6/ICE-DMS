@@ -41,6 +41,7 @@ public class ShiroConfig {
         filterRuleMap.put("/user/dingtalkAuth/**","anon");
         filterRuleMap.put("/matter/downloadByToken/**","anon");
         filterRuleMap.put("/onlyoffice/**","anon");
+        filterRuleMap.put("/install/test","anon");
 
         filterRuleMap.put("/avatar/upload","jwt");
         filterRuleMap.put("/avatar/**","anon");
