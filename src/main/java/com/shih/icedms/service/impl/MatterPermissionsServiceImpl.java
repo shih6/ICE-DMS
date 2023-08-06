@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shih.icedms.dto.AccessRoleDto;
 import com.shih.icedms.dto.MatterActionDto;
+import com.shih.icedms.dto.MatterDTO;
 import com.shih.icedms.entity.*;
 import com.shih.icedms.enums.ActionEnum;
 import com.shih.icedms.mapper.MatterPermissionsMapper;
@@ -50,7 +51,7 @@ public class MatterPermissionsServiceImpl extends ServiceImpl<MatterPermissionsM
     }
 
     public int getMatterPermission(String matterId, String userId) {
-        // 根目录
+/*        // 根目录
         if(Objects.equals(matterId, userId)){
             return ActionEnum.AccessControl.getDesc();
         }
@@ -76,9 +77,10 @@ public class MatterPermissionsServiceImpl extends ServiceImpl<MatterPermissionsM
             if(item.getRoleType()==1){
                 actionNum=actionNum|item.getAction();
             }
-        };
-
-        return actionNum;
+        };*/
+        MatterDTO matterDtoById = matterService.getMatterDtoById(matterId, userId);
+        Integer action = matterDtoById.getAction();
+        return action;
     }
     public boolean checkMatterPermission(String matterId, ActionEnum actionEnum){
         User user = (User)SecurityUtils.getSubject().getPrincipal();

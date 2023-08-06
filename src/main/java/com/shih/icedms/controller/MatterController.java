@@ -98,9 +98,7 @@ public class MatterController {
     @GetMapping("/matter/list")
     @ApiOperation(value = "获取文件列表")
     public ApiResult list(
-            @ApiParam(value = "文件夹id",defaultValue = "root",example = "root") @RequestParam(required = false) String matterId,
-            @ApiParam(value = "页数",defaultValue = "1",example = "1") @RequestParam(required = false,defaultValue = "1") int pageNum,
-            @ApiParam(value = "单页大小",defaultValue = "100",example = "100") @RequestParam(required = false,defaultValue = "100") int pageSize){
+            @ApiParam(value = "文件夹id",defaultValue = "root",example = "root") @RequestParam(required = false) String matterId){
         User user =(User)SecurityUtils.getSubject().getPrincipal();
         if(matterId==null){
             matterId=user.getId();

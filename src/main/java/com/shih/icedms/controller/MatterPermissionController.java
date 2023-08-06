@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.shih.icedms.dto.AccessRoleDto;
 import com.shih.icedms.dto.ApiResult;
 import com.shih.icedms.dto.MatterActionDto;
+import com.shih.icedms.entity.Matter;
 import com.shih.icedms.entity.MatterPermissions;
 import com.shih.icedms.entity.User;
 import com.shih.icedms.enums.ActionEnum;
@@ -76,6 +77,15 @@ public class  MatterPermissionController {
         // 检查角色是否存在
         matterPermissionsService.removeById(permissionId);
         return ApiResult.SUCCESS();
+    }
+    @ApiOperation("修改是否继承权限")
+    @GetMapping("/matter/extendSuper")
+    public ApiResult matterExtendSuper(@RequestParam String matterId,@RequestParam Boolean extendSuper){
+        matterPermissionsService.checkMatterPermission(matterId,ActionEnum.AccessControl);
+        Matter matter=matterService.getById(matterId);
+        matter.setExtendSuper(extendSuper);
+        matterService.updateById(matter);
+        return ApiResult.SUCCESS(matter.getExtendSuper());
     }
     @ApiOperation("获取权限列表")
     @GetMapping("/matter/permission")
