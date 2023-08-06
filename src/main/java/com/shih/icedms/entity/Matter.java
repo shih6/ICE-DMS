@@ -54,6 +54,11 @@ public class Matter implements Serializable {
      */
     private Long size;
 
+    /**
+     *
+     */
+    private Boolean extendSuper;
+
     private static final long serialVersionUID = 1L;
 
     @Override

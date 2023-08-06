@@ -163,6 +163,7 @@ public class UserController {
         matter.setCreateTime(new Date().getTime());
         matter.setStatus(1);
         matter.setModifiedTime(new Date().getTime());
+        matter.setExtendSuper(false);
         matterService.save(matter);
         UserRoles userRoles=new UserRoles();
         userRoles.setUserId(userDto.getId());

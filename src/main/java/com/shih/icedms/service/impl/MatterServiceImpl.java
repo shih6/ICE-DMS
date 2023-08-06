@@ -58,18 +58,8 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
     }
 
     @Override
-    public Page<MatterDTO> listByPage(String matterId, String userId, int pageNum, int pageSize){
-        Page<MatterDTO> page=baseMapper.list(Page.of(pageNum,pageSize),matterId, userId, 31);
-        page.getRecords().forEach(i->{
-            if(i.getSubMatters()==null){
-                i.setSubMatters(new ArrayList<>());
-            }
-        });
-        return page;
-    }
-    @Override
-    public List<MatterDTO> list(String matterId, String userId,Integer type){
-        List<MatterDTO> list = baseMapper.list(matterId, userId, type, 31);
+    public List<MatterDTO> list(String parentId, String userId,Integer type){
+        List<MatterDTO> list = baseMapper.list(parentId, userId, type, 31);
         list.forEach(i->{
             if(i.getSubMatters()==null){
                 i.setSubMatters(new ArrayList<>());
@@ -90,9 +80,17 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
     }
     @Override
     public MatterDTO getMatterDtoById(String matterId, String userId) {
-        MatterDTO dto=baseMapper.getMatterDtoById(matterId, userId, 31);
-        if(dto.getSubMatters()==null){
-            dto.setSubMatters(new ArrayList<>());
+        List<MatterDTO> list = baseMapper.list(null, userId, null, 31);
+        MatterDTO dto=null;
+        for (MatterDTO p : list) {
+            if (p.getId().equals(matterId)) {
+                dto = p;
+                if (dto.getSubMatters() == null) {
+                    dto.setSubMatters(new ArrayList<>());
+                }
+                break;
+            }
+
         }
         return dto;
     }

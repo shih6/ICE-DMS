@@ -14,10 +14,8 @@ import java.util.List;
 * @Entity com.shih.icedms.entity.Matter
 */
 public interface MatterMapper extends BaseMapper<Matter> {
-    Page<MatterDTO> list(Page<MatterDTO> page, String matterId, String userId, int fullAction);
-    List<MatterDTO> list(String matterId, String userId, Integer type, int fullAction);
+    List<MatterDTO> list(String parentId, String userId, Integer type, int fullAction);
     Page<MatterDTO> listSearch(Page<MatterDTO> page,String matterName, String userId, int fullAction);
-    MatterDTO getMatterDtoById(String matterId,String userId, int fullAction);
 }
 
 

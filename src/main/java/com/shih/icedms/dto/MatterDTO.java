@@ -19,6 +19,7 @@ public class MatterDTO {
     private String creator;
     private Integer status;
     private Long size;
+    private Boolean extendSuper;
     // 新增字段
     private Integer action;
     private String creatorName;
