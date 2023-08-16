@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.rmi.ConnectException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -24,8 +25,9 @@ public interface MatterService extends IService<Matter> {
     Page<MatterDTO> listSearch(Page page,String matterName);
     MatterDTO getMatterDtoById(String matterId,String userId);
     MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException;
-    Boolean deleteMatter(String matterId);
-    List<String> deleteMatters(String matterIds);
+    MatterDTO createFile(String fileName,String fileType, String parentMatterId) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException;
+    Boolean deleteMatter(String matterId) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException;
+    List<String> deleteMatters(String matterIds) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException;
     MatterDTO getTree(String matterId,String userId);
     void saveOrUpdateMatter(String userId, FileHistory newHistory, Matter matter, Integer version);
     boolean move(String matterId,String target);

@@ -29,6 +29,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 @Api(tags = "onlyoffice相关接口")
@@ -70,7 +72,7 @@ public class OnlyOfficeController {
 
     @PostMapping("/callback")
     @ApiOperation(value = "onlyoffice回调")
-    public ResponseEntity OnlyOfficeCallBack(@RequestBody Track track) throws MalformedURLException {
+    public ResponseEntity OnlyOfficeCallBack(@RequestBody Track track) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException {
         log.info(track.getStatus().toString());
         log.info(track.toString());
         if(track.getStatus()==2||track.getStatus()==3){

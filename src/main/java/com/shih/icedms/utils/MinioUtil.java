@@ -18,8 +18,11 @@ import javax.annotation.Resource;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -97,10 +100,33 @@ public class MinioUtil {
     /**
      * 文件上传
      *
+     * @param file 文件
+     * @objectName 另存为文件名
+     * @return Boolean
+     */
+    public StatObjectResponse upload(File file, String objectName) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException {
+        ObjectWriteResponse response;
+        try {
+            PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(prop.getBucketName()).object(objectName)
+                    .stream(new FileInputStream(file),file.length(),-1).build();
+            //文件名称相同会覆盖
+            response = minioClient.putObject(objectArgs);
+        } catch (ConnectException e) {
+            log.error("存储服务器链接异常"+e.getMessage());
+            throw e;
+        }catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
+        }
+        return getObjectStatus(objectName);
+    }
+    /**
+     * 文件上传
+     *
      * @param url 文件路径
      * @return Boolean
      */
-    public StatObjectResponse upload(URL url, String objectName){
+    public StatObjectResponse upload(URL url, String objectName)throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException{
         ObjectWriteResponse response;
         try {
             URLConnection urlConnection=url.openConnection();
@@ -109,20 +135,27 @@ public class MinioUtil {
                     .stream(inputStream,urlConnection.getContentLength(),-1).contentType(urlConnection.getContentType()).build();
             //文件名称相同会覆盖
             response = minioClient.putObject(objectArgs);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        } catch (ConnectException e) {
+            log.error("存储服务器链接异常"+e.getMessage());
+            throw e;
+        }catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
         }
         return getObjectStatus(objectName);
     }
-    public StatObjectResponse upload(MultipartFile file, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+    public StatObjectResponse upload(MultipartFile file, String objectName) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
         ObjectWriteResponse response;
         try(InputStream inputStream=file.getInputStream()) {
             PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(prop.getBucketName()).object(objectName)
                     .stream(inputStream, file.getSize(), -1).contentType(file.getContentType()).build();
             //文件名称相同会覆盖
             response = minioClient.putObject(objectArgs);
-        }catch (IOException e){
+        } catch (ConnectException e) {
+            log.error("存储服务器链接异常"+e.getMessage());
+            throw e;
+        }catch (Exception e) {
+            log.error(e.getMessage());
             throw e;
         }
         return getObjectStatus(objectName);
@@ -289,16 +322,19 @@ public class MinioUtil {
      * @return Boolean
      */
     public void delete(String objectName) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
-        StatObjectResponse statObjectResponse;
         try{
-            statObjectResponse=minioClient.statObject(StatObjectArgs.builder().bucket(prop.getBucketName()).object(objectName).build());
-        }catch (Exception e){
-            throw new MinioException(e.getMessage());
+            RemoveObjectArgs removeObjectArgs=RemoveObjectArgs.builder().bucket(prop.getBucketName()).object(objectName).build();
+            GetObjectArgs objectArgs = GetObjectArgs.builder().bucket(prop.getBucketName())
+                    .object(objectName).build();
+            minioClient.removeObject(removeObjectArgs);
+        } catch (ConnectException e) {
+            log.error("存储服务器链接异常"+e.getMessage());
+            throw e;
+        }catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
         }
-        RemoveObjectArgs removeObjectArgs=RemoveObjectArgs.builder().bucket(prop.getBucketName()).object(objectName).build();
-        GetObjectArgs objectArgs = GetObjectArgs.builder().bucket(prop.getBucketName())
-                .object(objectName).build();
-        minioClient.removeObject(removeObjectArgs);
+
 
     }
     /**

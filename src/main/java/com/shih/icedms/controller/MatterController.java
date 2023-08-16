@@ -3,6 +3,7 @@ package com.shih.icedms.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shih.icedms.dto.ApiResult;
+import com.shih.icedms.dto.CreateDto;
 import com.shih.icedms.dto.MatterDTO;
 import com.shih.icedms.dto.MatterSearchDTO;
 import com.shih.icedms.entity.FileHistory;
@@ -127,6 +128,17 @@ public class MatterController {
             return ApiResult.ERROR("IOException"+e.getMessage());
         }
     }
+    @PostMapping("/matter/create")
+    @ApiOperation(value = "使用模板创建文件文件")
+    public ApiResult create(@RequestBody CreateDto createDto) {
+        try{
+            MatterDTO matterDTO=matterService.createFile(createDto.getFileName(),createDto.getFileType(),createDto.getParentMatterId());
+            return ApiResult.SUCCESS(matterDTO);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return ApiResult.ERROR("创建失败，可能是存储服务器出错");
+        }
+    }
     @ApiOperation(value = "文件下载")
     @RequestMapping("/matter/download")
     public ApiResult download(@RequestParam String matterId, @RequestParam(required = false) String version, HttpServletResponse res) throws MinioException, IOException {
@@ -179,7 +191,7 @@ public class MatterController {
     }
     @ApiOperation(value = "文件删除")
     @DeleteMapping("/matter/delete")
-    public ApiResult delete(@RequestParam String matterId)   {
+    public ApiResult delete(@RequestParam String matterId) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
         // 检查是否含有文件或子文件夹
         if (matterService.count(new LambdaQueryWrapper<Matter>().eq(Matter::getParentId,matterId))>0) {
             return ApiResult.ERROR("文件夹内含有文件，删除失败");
@@ -192,7 +204,7 @@ public class MatterController {
     }
     @ApiOperation(value = "批量删除")
     @PostMapping("/matter/deletes")
-    public ApiResult deletes(@RequestBody Map map)   {
+    public ApiResult deletes(@RequestBody Map map) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
         String matterIds= (String) map.get("matterIds");
         List<String> successList = matterService.deleteMatters(matterIds);
         return ApiResult.SUCCESS(successList);
