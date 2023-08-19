@@ -41,6 +41,13 @@
         ) a
 
     </select>
+    <select id="listOfDtoWithoutAction" resultType="com.shih.icedms.dto.MatterDTO">
+        SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,m.size,
+        u.actual_name as creator_name,m.extend_super
+        FROM matter m
+        LEFT JOIN `user` u on u.id=m.creator
+
+    </select>
     <select id="listSearch" resultType="com.shih.icedms.dto.MatterDTO">
         select * from(
         SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,m.size,

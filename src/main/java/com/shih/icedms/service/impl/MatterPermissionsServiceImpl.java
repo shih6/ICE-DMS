@@ -51,6 +51,10 @@ public class MatterPermissionsServiceImpl extends ServiceImpl<MatterPermissionsM
     }
 
     public int getMatterPermission(String matterId, String userId) {
+        User user = (User)SecurityUtils.getSubject().getPrincipal();
+        if(user.getIsAdmin()!=null&&user.getIsAdmin()==1){
+            return ActionEnum.AccessControl.getDesc();
+        }
 /*        // 根目录
         if(Objects.equals(matterId, userId)){
             return ActionEnum.AccessControl.getDesc();

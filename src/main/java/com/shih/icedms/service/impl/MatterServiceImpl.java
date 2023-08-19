@@ -4,14 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shih.icedms.dto.MatterDTO;
-import com.shih.icedms.entity.FileHistory;
-import com.shih.icedms.entity.Matter;
-import com.shih.icedms.entity.User;
+import com.shih.icedms.entity.*;
 import com.shih.icedms.enums.ActionEnum;
 import com.shih.icedms.mapper.MatterMapper;
-import com.shih.icedms.service.FileHistoryService;
-import com.shih.icedms.service.MatterPermissionsService;
-import com.shih.icedms.service.MatterService;
+import com.shih.icedms.service.*;
 import com.shih.icedms.utils.CommonUtil;
 import com.shih.icedms.utils.MinioUtil;
 import io.minio.errors.*;
@@ -21,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,10 +25,7 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -44,6 +38,8 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
     implements MatterService{
     private MatterPermissionsService matterPermissionsService;
     private FileHistoryService fileHistoryService;
+    private UserRolesService userRolesService;
+    private UsersService usersService;
     private MinioUtil minioUtil;
     @Autowired
     public void setMatterPermissionsService(MatterPermissionsService matterPermissionsService) {
@@ -54,28 +50,79 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
         this.fileHistoryService = fileHistoryService;
     }
     @Autowired
+    public void setUserRolesService(UserRolesService userRolesService) {
+        this.userRolesService = userRolesService;
+    }
+    @Autowired
+    public void setUsersService(UsersService usersService) {
+        this.usersService = usersService;
+    }
+
+    @Autowired
     public void setMinioUtil(MinioUtil minioUtil) {
         this.minioUtil = minioUtil;
     }
 
     @Override
-    public List<MatterDTO> list(String parentId, String userId,Integer type){
-        List<MatterDTO> list = listAll(parentId, userId, type).stream().filter(p->p.getAction()>0).collect(Collectors.toList());
-        list.forEach(i->{
-            if(i.getSubMatters()==null){
-                i.setSubMatters(new ArrayList<>());
+    public List<MatterDTO> listOfDto(String userId,Integer type){
+        List<MatterDTO> matterDTOList = null;
+        if(type==null){
+            matterDTOList=baseMapper.listOfDtoWithoutAction();
+        }else{
+            if(type==0){
+                matterDTOList=baseMapper.listOfDtoWithoutAction().stream().filter(p->p.getType()==0).collect(Collectors.toList());
             }
-        });
-        return list;
-    }
-    public List<MatterDTO> listAll(String parentId, String userId,Integer type){
-        List<MatterDTO> list = baseMapper.list(parentId, userId, type, 31);
-        list.forEach(i->{
-            if(i.getSubMatters()==null){
-                i.setSubMatters(new ArrayList<>());
+            if(type==1){
+                matterDTOList=baseMapper.listOfDtoWithoutAction().stream().filter(p->p.getType()<=1).collect(Collectors.toList());
             }
-        });
-        return list;
+        }
+        List<MatterPermissions> permissions=matterPermissionsService.list();
+        List<UserRoles> userRoles=userRolesService.list();
+        User user=usersService.getById(userId);
+        for (MatterDTO currentNode : matterDTOList) {
+            currentNode.setSubMatters(new ArrayList<>());
+            int action=0;
+            //管理员
+            if(user.getIsAdmin()!=null&&user.getIsAdmin()==1){
+                action=ActionEnum.AccessControl.getDesc();
+            }
+            //文件夹创建者
+            if(currentNode.getCreator()!=null&&currentNode.getCreator().equals(userId)){
+                action= ActionEnum.AccessControl.getDesc();
+            }
+            // 权限设置列表
+            List<MatterPermissions> matterPermissions = permissions.stream().filter(p -> p.getMatterId().equals(currentNode.getId())).collect(Collectors.toList());
+            for (MatterPermissions permission : matterPermissions) {
+                if(ActionEnum.AccessControl.getDesc()==action){
+                    break;
+                }
+                // 用户组
+                if (permission.getRoleType() == 0) {
+                    if (userRoles.stream().anyMatch(p -> p.getRoleId().toString().equals(permission.getRoleId()) &&
+                            p.getUserId().equals(userId))) {
+                        action = action | permission.getAction();
+                    }
+                }
+                //用户
+                if(permission.getRoleType()==1){
+                    if(userId.equals(permission.getRoleId())){
+                        action=action|permission.getAction();
+                    }
+                }
+            }
+            currentNode.setAction(action);
+        }
+        for (MatterDTO currentNode : matterDTOList) {
+            // 检查是否继承上级文件
+            if(currentNode.getExtendSuper()!=null&& currentNode.getExtendSuper()){
+                MatterDTO preNode=matterDTOList.stream().filter(p->p.getId().equals(currentNode.getParentId())).findAny().orElse(null);
+                if(preNode!=null){
+                    currentNode.setAction(currentNode.getAction()|preNode.getAction());
+                }
+            }
+
+        }
+        return matterDTOList;
     }
     @Override
     public Page<MatterDTO> listSearch(Page page,String matterName){
@@ -90,18 +137,11 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
     }
     @Override
     public MatterDTO getMatterDtoById(String matterId, String userId) {
-        List<MatterDTO> list = baseMapper.list(null, userId, null, 31);
-        MatterDTO dto=null;
-        for (MatterDTO p : list) {
-            if (p.getId().equals(matterId)) {
-                dto = p;
-                if (dto.getSubMatters() == null) {
-                    dto.setSubMatters(new ArrayList<>());
-                }
-                break;
-            }
-
-        }
+        User user=usersService.getById(userId);
+        List<MatterDTO> list = listOfDto( userId,null);
+        MatterDTO dto=list.stream().filter(p->p.getId().equals(matterId)).findAny().orElse(null);
+        dto.setSubMatters(listOfDto(user.getId(),null).stream().filter(p->p.getAction()>0&&
+                p.getParentId().equals(matterId)).collect(Collectors.toList()));
         return dto;
     }
     @Override
@@ -134,7 +174,7 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
             minioUtil.upload(multipartFile, newHistory.getObjectName());
         }
         MatterDTO matterDTO = getMatterDtoById(matter.getId(), user.getId());
-        matterDTO.setSubMatters(list(matter.getId(), user.getId(),null));
+
         return matterDTO;
     }
     @Transactional
@@ -205,50 +245,58 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
         }
         return successList;
     }
-    @Override
-    public MatterDTO getTree(String matterId,String userId){
-        MatterDTO root=getMatterDtoById(matterId, userId);
-        List<MatterDTO> list = list(null, userId,0);
-        // 构建树结构
-        List<MatterDTO> cacheList=listAll(null,userId,0);
-        for (int i=0;i<list.size();i++) {
-            MatterDTO item = list.get(i);
-            List<String> outPut = new ArrayList<>();
-            getPath(item, cacheList, userId, outPut);
-            for (int j = 1; j < outPut.size(); j++) {
-                String parentId = outPut.get(j - 1);
-                String currentId = outPut.get(j);
-                // 在树中找到父节点
-                MatterDTO parentMatterDTO = root.findNode(parentId);
-                // 获取当前要放置的节点
-                MatterDTO currentMatterDTO = cacheList.stream().filter(p -> p.getId().equals(currentId)).findFirst().get();
-                // 如果当前的父节点无此节点则置入此节点
-                if (parentMatterDTO.getSubMatters().stream().noneMatch(p -> p.getId().equals(currentMatterDTO.getId()))) {
-                    parentMatterDTO.getSubMatters().add(currentMatterDTO);
+
+    /***
+     *
+     * @param userId
+     * @param type 0为仅文件夹 1为包含非文件夹
+     * @return
+     */
+    public MatterDTO getTreeV2(String userId,int type){
+        List<MatterDTO> matterDTOList = listOfDto(userId,type);
+        //找到根节点
+        MatterDTO root=matterDTOList.stream().filter(p->p.getId().equals("root")).findAny().orElse(null);
+        if(root==null){
+            throw new RuntimeException("根节点不存在");
+        }
+        // 移除root节点 防止重复添加
+        matterDTOList.remove(root);
+
+        List<MatterDTO> hasRights = matterDTOList.stream().filter(p -> p.getAction() > 0).collect(Collectors.toList());
+        List<MatterDTO> tmpNode=new ArrayList<>();
+        for (MatterDTO current : hasRights) {
+            MatterDTO preNode=matterDTOList.stream().filter(p->p.getId().equals(current.getParentId())).findAny().orElse(null);
+            if(preNode!=null){
+                if(!tmpNode.contains(preNode)&&!hasRights.contains(preNode)){
+                    tmpNode.add(preNode);
+                }
+            }
+        }
+        hasRights.addAll(tmpNode);
+
+
+        for (MatterDTO currentNode : hasRights) {
+            if(root.getId().equals(currentNode.getParentId())){
+                if(root.getSubMatters()==null){
+                    root.setSubMatters(new ArrayList<>());
+                }
+                root.getSubMatters().add(currentNode);
+            }
+            if(currentNode.getSubMatters()==null){
+                currentNode.setSubMatters(new ArrayList<>());
+            }
+            // 二次循环寻找子节点
+            for (MatterDTO nextNode : matterDTOList) {
+                if(currentNode.getId().equals(nextNode.getParentId())){
+                    if(hasRights.contains(nextNode)){
+                        currentNode.getSubMatters().add(nextNode);
+                    }
                 }
             }
         }
         return root;
     }
 
-    public void getPath(MatterDTO matterDTO, List<MatterDTO> cacheList,String userId,@NotNull List<String> outPut){
-        outPut.add(0,matterDTO.getId());
-        if(matterDTO.getParentId().equals("")){
-            return;
-        }
-        MatterDTO parentMatterDto = cacheList.stream().filter(p -> {
-            return p.getId().equals(matterDTO.getParentId());
-        }).findFirst().orElse(null);
-        if(parentMatterDto==null){
-            parentMatterDto=getMatterDtoById(matterDTO.getParentId(),userId);
-            if(parentMatterDto!=null){
-                cacheList.add(parentMatterDto);
-                getPath(parentMatterDto,cacheList,userId, outPut);
-            }
-        }else{
-            getPath(parentMatterDto,cacheList,userId, outPut);
-        }
-    }
 }
 
 
