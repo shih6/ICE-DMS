@@ -15,7 +15,6 @@ import java.util.List;
 */
 public interface MatterMapper extends BaseMapper<Matter> {
     List<MatterDTO> listOfDtoWithoutAction();
-    Page<MatterDTO> listSearch(Page<MatterDTO> page,String matterName, String userId, int fullAction);
 }
 
 
