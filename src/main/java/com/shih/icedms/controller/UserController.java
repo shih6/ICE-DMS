@@ -76,13 +76,16 @@ public class UserController {
         if(user!=null&&user.getStatus()==2){
             return ApiResult.ERROR("账号已被锁定");
         }
-        if(user !=null&& BCrypt.checkpw(passWord, user.getPassword())){
-            atomicInteger.expire(0,TimeUnit.SECONDS);
-            response.setHeader("Authorization", JwtUtil.createJWT(user.getUsername(),passWord));
-            return ApiResult.SUCCESS(user);
-        }else{
-            return ApiResult.ERROR("账号或密码错误,还有"+(5-atomicInteger.get())+"次机会");
+        try{
+            if(user !=null&& BCrypt.checkpw(passWord, user.getPassword())){
+                atomicInteger.expire(0,TimeUnit.SECONDS);
+                response.setHeader("Authorization", JwtUtil.createJWT(user.getUsername(),passWord));
+                return ApiResult.SUCCESS(user);
+            }
+        }catch (Exception e){
+
         }
+        return ApiResult.ERROR("账号或密码错误,还有"+(5-atomicInteger.get())+"次机会");
     }
 
     @ApiOperation("钉钉鉴权登录V2")

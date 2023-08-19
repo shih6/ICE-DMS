@@ -1,8 +1,10 @@
 package com.shih.icedms.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shih.icedms.dto.ApiResult;
+import com.shih.icedms.dto.CreateDto;
 import com.shih.icedms.dto.MatterDTO;
 import com.shih.icedms.dto.MatterSearchDTO;
 import com.shih.icedms.entity.FileHistory;
@@ -54,42 +56,6 @@ public class MatterController {
     public void setMatterPermissionsService(MatterPermissionsService matterPermissionsService) {
         this.matterPermissionsService = matterPermissionsService;
     }
-
-    @ApiOperation(value = "创建文件夹")
-    @PutMapping("/matter/addFolder")
-    public ApiResult addFolder(@RequestParam(required = false) String parentId,@RequestParam String name){
-        User user =(User)SecurityUtils.getSubject().getPrincipal();
-        if(parentId==null||parentId.equals(user.getId())){
-            parentId=user.getId();
-        }else{
-            if(matterService.getById(parentId)==null){
-                return ApiResult.ERROR("文件不存在");
-            }
-        }
-        matterPermissionsService.checkMatterPermission(parentId, ActionEnum.Edit);
-        if(matterService.count(new LambdaQueryWrapper<Matter>().eq(Matter::getParentId,parentId).eq(Matter::getType,0).eq(Matter::getName,name))>0){
-            return ApiResult.ERROR("已存在同名文件夹");
-        }
-        Matter matter=new Matter();
-        matter.setCreateTime(new Date().getTime());
-        matter.setName(name);
-        matter.setCreator(user.getId());
-        matter.setStatus(1);
-        // 文件夹
-        matter.setType(0);
-        matter.setModifiedTime(new Date().getTime());
-        matter.setParentId(parentId);
-        matterService.save(matter);
-        if(parentId.equals("public")){
-            MatterPermissions matterPermissions=new MatterPermissions();
-            matterPermissions.setAction(ActionEnum.View.getDesc());
-            matterPermissions.setRoleId("0");
-            matterPermissions.setRoleType(0);
-            matterPermissions.setMatterId(matter.getId());
-            matterPermissionsService.save(matterPermissions);
-        }
-        return ApiResult.SUCCESS(matter);
-    }
     @ApiOperation(value = "生成临时访问地址")
     @PostMapping("/shared")
     public ApiResult GetTemporaryAccessUrl(String fileName){
@@ -115,9 +81,14 @@ public class MatterController {
     }
     @PostMapping("/matter/add")
     @ApiOperation(value = "上传文件")
-    public ApiResult upload(@RequestParam(value = "file") MultipartFile multipartFile, @RequestParam(required = false,value = "matterId") String parentMatterId) {
+    public ApiResult upload(@RequestParam(value = "file") MultipartFile multipartFile,
+                            @RequestParam(required = false,value = "matterId") String parentMatterId,
+                            @RequestParam Boolean extendSuper) {
         try{
             MatterDTO matterDTO=matterService.uploadFile(multipartFile,parentMatterId);
+            // 简单修复 extendSuper传入的字段
+            matterService.update(new LambdaUpdateWrapper<Matter>().eq(Matter::getId,matterDTO.getId()).set(Matter::getExtendSuper,extendSuper));
+            matterDTO.setExtendSuper(extendSuper);
             return ApiResult.SUCCESS(matterDTO);
         } catch (MinioException e) {
             log.error(e.getMessage());
@@ -125,6 +96,17 @@ public class MatterController {
         } catch (IOException | NoSuchAlgorithmException | InvalidKeyException e) {
             log.error(e.getMessage());
             return ApiResult.ERROR("IOException"+e.getMessage());
+        }
+    }
+    @PostMapping("/matter/create")
+    @ApiOperation(value = "使用模板创建文件文件")
+    public ApiResult create(@RequestBody CreateDto createDto) {
+        try{
+            MatterDTO matterDTO=matterService.create(createDto);
+            return ApiResult.SUCCESS(matterDTO);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return ApiResult.ERROR("创建失败，可能是存储服务器出错");
         }
     }
     @ApiOperation(value = "文件下载")
@@ -179,7 +161,7 @@ public class MatterController {
     }
     @ApiOperation(value = "文件删除")
     @DeleteMapping("/matter/delete")
-    public ApiResult delete(@RequestParam String matterId)   {
+    public ApiResult delete(@RequestParam String matterId) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
         // 检查是否含有文件或子文件夹
         if (matterService.count(new LambdaQueryWrapper<Matter>().eq(Matter::getParentId,matterId))>0) {
             return ApiResult.ERROR("文件夹内含有文件，删除失败");
@@ -192,7 +174,7 @@ public class MatterController {
     }
     @ApiOperation(value = "批量删除")
     @PostMapping("/matter/deletes")
-    public ApiResult deletes(@RequestBody Map map)   {
+    public ApiResult deletes(@RequestBody Map map) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
         String matterIds= (String) map.get("matterIds");
         List<String> successList = matterService.deleteMatters(matterIds);
         return ApiResult.SUCCESS(successList);
