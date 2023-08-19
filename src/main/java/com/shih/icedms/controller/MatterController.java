@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
@@ -75,8 +76,7 @@ public class MatterController {
             }
         }
         matterPermissionsService.checkMatterPermission(matterId, ActionEnum.View);
-        MatterDTO parentMatter=matterService.getMatterDtoById(matterId, user.getId());
-        parentMatter.setSubMatters(matterService.list(matterId, user.getId(), null));
+        MatterDTO parentMatter=matterService.getMatterDtoById(matterId,user.getId());
         return ApiResult.SUCCESS(parentMatter);
     }
     @PostMapping("/matter/add")
@@ -228,7 +228,8 @@ public class MatterController {
     @GetMapping("/matter/tree")
     public ApiResult tree(){
         User user =(User) SecurityUtils.getSubject().getPrincipal();
-        MatterDTO matterDTO=matterService.getTree("root", user.getId());
+//        MatterDTO matterDTO=matterService.getTree("root", user.getId());
+        MatterDTO matterDTO=matterService.getTreeV2(user.getId(), 0);
         return ApiResult.SUCCESS(matterDTO);
     }
     @ApiOperation(value = "搜索")

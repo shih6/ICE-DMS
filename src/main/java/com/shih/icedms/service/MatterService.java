@@ -22,14 +22,14 @@ import java.util.List;
 * @createDate 2023-06-04 21:16:46
 */
 public interface MatterService extends IService<Matter> {
-    List<MatterDTO> list(String matterId, String userId,Integer type);
+    List<MatterDTO> listOfDto(String userId,Integer type);
     Page<MatterDTO> listSearch(Page page,String matterName);
     MatterDTO getMatterDtoById(String matterId,String userId);
     MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException;
     MatterDTO create(CreateDto createDto) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException;
-    Boolean deleteMatter(String matterId) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException;
-    List<String> deleteMatters(String matterIds) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException;
-    MatterDTO getTree(String matterId,String userId);
+    Boolean deleteMatter(String matterId);
+    List<String> deleteMatters(String matterIds);
+    MatterDTO getTreeV2(String userId,int type);
     void saveOrUpdateMatter(String userId, FileHistory newHistory, Matter matter, Integer version);
     boolean move(String matterId,String target);
 }
