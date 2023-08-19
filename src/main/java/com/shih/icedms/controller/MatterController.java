@@ -1,6 +1,7 @@
 package com.shih.icedms.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shih.icedms.dto.ApiResult;
 import com.shih.icedms.dto.CreateDto;
@@ -54,42 +55,6 @@ public class MatterController {
     public void setMatterPermissionsService(MatterPermissionsService matterPermissionsService) {
         this.matterPermissionsService = matterPermissionsService;
     }
-
-    @ApiOperation(value = "创建文件夹")
-    @PutMapping("/matter/addFolder")
-    public ApiResult addFolder(@RequestParam(required = false) String parentId,@RequestParam String name){
-        User user =(User)SecurityUtils.getSubject().getPrincipal();
-        if(parentId==null||parentId.equals(user.getId())){
-            parentId=user.getId();
-        }else{
-            if(matterService.getById(parentId)==null){
-                return ApiResult.ERROR("文件不存在");
-            }
-        }
-        matterPermissionsService.checkMatterPermission(parentId, ActionEnum.Edit);
-        if(matterService.count(new LambdaQueryWrapper<Matter>().eq(Matter::getParentId,parentId).eq(Matter::getType,0).eq(Matter::getName,name))>0){
-            return ApiResult.ERROR("已存在同名文件夹");
-        }
-        Matter matter=new Matter();
-        matter.setCreateTime(new Date().getTime());
-        matter.setName(name);
-        matter.setCreator(user.getId());
-        matter.setStatus(1);
-        // 文件夹
-        matter.setType(0);
-        matter.setModifiedTime(new Date().getTime());
-        matter.setParentId(parentId);
-        matterService.save(matter);
-        if(parentId.equals("public")){
-            MatterPermissions matterPermissions=new MatterPermissions();
-            matterPermissions.setAction(ActionEnum.View.getDesc());
-            matterPermissions.setRoleId("0");
-            matterPermissions.setRoleType(0);
-            matterPermissions.setMatterId(matter.getId());
-            matterPermissionsService.save(matterPermissions);
-        }
-        return ApiResult.SUCCESS(matter);
-    }
     @ApiOperation(value = "生成临时访问地址")
     @PostMapping("/shared")
     public ApiResult GetTemporaryAccessUrl(String fileName){
@@ -116,9 +81,14 @@ public class MatterController {
     }
     @PostMapping("/matter/add")
     @ApiOperation(value = "上传文件")
-    public ApiResult upload(@RequestParam(value = "file") MultipartFile multipartFile, @RequestParam(required = false,value = "matterId") String parentMatterId) {
+    public ApiResult upload(@RequestParam(value = "file") MultipartFile multipartFile,
+                            @RequestParam(required = false,value = "matterId") String parentMatterId,
+                            @RequestParam Boolean extendSuper) {
         try{
             MatterDTO matterDTO=matterService.uploadFile(multipartFile,parentMatterId);
+            // 简单修复 extendSuper传入的字段
+            matterService.update(new LambdaUpdateWrapper<Matter>().eq(Matter::getId,matterDTO.getId()).set(Matter::getExtendSuper,extendSuper));
+            matterDTO.setExtendSuper(extendSuper);
             return ApiResult.SUCCESS(matterDTO);
         } catch (MinioException e) {
             log.error(e.getMessage());
@@ -132,7 +102,7 @@ public class MatterController {
     @ApiOperation(value = "使用模板创建文件文件")
     public ApiResult create(@RequestBody CreateDto createDto) {
         try{
-            MatterDTO matterDTO=matterService.createFile(createDto.getFileName(),createDto.getFileType(),createDto.getParentMatterId());
+            MatterDTO matterDTO=matterService.create(createDto);
             return ApiResult.SUCCESS(matterDTO);
         } catch (Exception e) {
             log.error(e.getMessage());

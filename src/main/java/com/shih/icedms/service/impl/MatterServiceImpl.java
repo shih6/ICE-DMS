@@ -3,9 +3,12 @@ package com.shih.icedms.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shih.icedms.dto.ApiResult;
+import com.shih.icedms.dto.CreateDto;
 import com.shih.icedms.dto.MatterDTO;
 import com.shih.icedms.entity.FileHistory;
 import com.shih.icedms.entity.Matter;
+import com.shih.icedms.entity.MatterPermissions;
 import com.shih.icedms.entity.User;
 import com.shih.icedms.enums.ActionEnum;
 import com.shih.icedms.mapper.MatterMapper;
@@ -142,15 +145,31 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
         matterDTO.setSubMatters(list(matter.getId(), user.getId(),null));
         return matterDTO;
     }
+
+    /**
+     * 创建Matter文件夹或模板实例
+     * @param createDto DTO
+     * @return MatterDTO
+     * @throws IOException
+     * @throws MinioException
+     * @throws NoSuchAlgorithmException
+     * @throws InvalidKeyException
+     */
     @Override
     @Transactional(rollbackFor=Exception.class)
-    public MatterDTO createFile(String fileName,String fileType, String parentMatterId) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException {
+    public MatterDTO create(CreateDto createDto) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException {
+        String parentMatterId = createDto.getParentMatterId();
+        String fileName = createDto.getFileName();
+        String fileType = createDto.getFileType();
+        Boolean extendSuper = createDto.getExtendSuper();
+
         User user =(User) SecurityUtils.getSubject().getPrincipal();
         if(!StringUtils.hasText(parentMatterId)){
             parentMatterId = user.getId();
         }
         String templateName="";
         switch (fileType){
+            case "":return getMatterDtoById(createDir(parentMatterId,fileName,user.getId(),extendSuper).getId(), user.getId());
             case "docx":templateName="base.docx";break;
             case "xlsx":templateName="base.xlsx";break;
             case "pptx":templateName="base.pptx";break;
@@ -170,6 +189,7 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
         matter.setName(fileName);
         matter.setParentId(parentMatterId);
         matter.setCreateTime(new Date().getTime());
+        matter.setExtendSuper(extendSuper);
         matter.setSize(file.length());
         saveOrUpdateMatter(user.getId(), newHistory, matter,1);
         minioUtil.upload(file, newHistory.getObjectName());
@@ -177,14 +197,58 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
         matterDTO.setSubMatters(list(matter.getId(), user.getId(),null));
         return matterDTO;
     }
+    @Transactional
+    public Matter createDir(String parentId,String name,String userId,Boolean extendSuper){
+        matterPermissionsService.checkMatterPermission(parentId, ActionEnum.Edit);
+        if(count(new LambdaQueryWrapper<Matter>().eq(Matter::getParentId,parentId).eq(Matter::getType,0).eq(Matter::getName,name))>0){
+            throw new RuntimeException("已存在同名文件夹");
+        }
+        Matter matter=new Matter();
+        matter.setCreateTime(new Date().getTime());
+        matter.setName(name);
+        matter.setCreator(userId);
+        matter.setStatus(1);
+        matter.setExtendSuper(extendSuper);
+        // 文件夹
+        matter.setType(0);
+        matter.setModifiedTime(new Date().getTime());
+        matter.setParentId(parentId);
+        save(matter);
+        if(parentId.equals("public")){
+            MatterPermissions matterPermissions=new MatterPermissions();
+            matterPermissions.setAction(ActionEnum.View.getDesc());
+            matterPermissions.setRoleId("0");
+            matterPermissions.setRoleType(0);
+            matterPermissions.setMatterId(matter.getId());
+            matterPermissionsService.save(matterPermissions);
+        }
+        return matter;
+    }
     @Transactional(rollbackFor=Exception.class)
     public void saveOrUpdateMatter(String userId, FileHistory newHistory, Matter matter,Integer version) {
         matter.setModifiedTime(new Date().getTime());
+        // 补丁式修复
+        boolean saveFlag=false;
+        if(matter.getId()==null){
+            saveFlag=true;
+        }
         try{
             saveOrUpdate(matter);
         }catch (Exception e){
             log.error("插入失败:"+matter.toString());
             throw e;
+        }
+        // 执行save逻辑
+        if(saveFlag){
+            // 如果在根目录 自动添加权限
+            if(matter.getParentId().equals("public")){
+                MatterPermissions matterPermissions=new MatterPermissions();
+                matterPermissions.setAction(ActionEnum.View.getDesc());
+                matterPermissions.setRoleId("0");
+                matterPermissions.setRoleType(0);
+                matterPermissions.setMatterId(matter.getId());
+                matterPermissionsService.save(matterPermissions);
+            }
         }
         newHistory.setVersion(version);
         newHistory.setUserId(userId);

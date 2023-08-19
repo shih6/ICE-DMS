@@ -26,6 +26,7 @@ import java.net.ConnectException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.rmi.RemoteException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -113,7 +114,7 @@ public class MinioUtil {
             response = minioClient.putObject(objectArgs);
         } catch (ConnectException e) {
             log.error("存储服务器链接异常"+e.getMessage());
-            throw e;
+            throw new RuntimeException("存储服务器链接异常"+e.getMessage());
         }catch (Exception e) {
             log.error(e.getMessage());
             throw e;
@@ -137,7 +138,7 @@ public class MinioUtil {
             response = minioClient.putObject(objectArgs);
         } catch (ConnectException e) {
             log.error("存储服务器链接异常"+e.getMessage());
-            throw e;
+            throw new RuntimeException("存储服务器链接异常"+e.getMessage());
         }catch (Exception e) {
             log.error(e.getMessage());
             throw e;
@@ -153,7 +154,7 @@ public class MinioUtil {
             response = minioClient.putObject(objectArgs);
         } catch (ConnectException e) {
             log.error("存储服务器链接异常"+e.getMessage());
-            throw e;
+            throw new RuntimeException("存储服务器链接异常"+e.getMessage());
         }catch (Exception e) {
             log.error(e.getMessage());
             throw e;
@@ -329,7 +330,7 @@ public class MinioUtil {
             minioClient.removeObject(removeObjectArgs);
         } catch (ConnectException e) {
             log.error("存储服务器链接异常"+e.getMessage());
-            throw e;
+            throw new RuntimeException("存储服务器链接异常"+e.getMessage());
         }catch (Exception e) {
             log.error(e.getMessage());
             throw e;

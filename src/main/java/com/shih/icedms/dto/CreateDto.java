@@ -7,4 +7,5 @@ public class CreateDto {
     private String fileName;
     private String fileType;
     private String parentMatterId;
+    private Boolean extendSuper;
 }

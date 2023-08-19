@@ -2,6 +2,7 @@ package com.shih.icedms.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.shih.icedms.dto.CreateDto;
 import com.shih.icedms.dto.MatterDTO;
 import com.shih.icedms.entity.FileHistory;
 import com.shih.icedms.entity.Matter;
@@ -25,7 +26,7 @@ public interface MatterService extends IService<Matter> {
     Page<MatterDTO> listSearch(Page page,String matterName);
     MatterDTO getMatterDtoById(String matterId,String userId);
     MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException;
-    MatterDTO createFile(String fileName,String fileType, String parentMatterId) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException;
+    MatterDTO create(CreateDto createDto) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException;
     Boolean deleteMatter(String matterId) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException;
     List<String> deleteMatters(String matterIds) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException;
     MatterDTO getTree(String matterId,String userId);
