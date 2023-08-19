@@ -22,25 +22,7 @@
         type,create_time,modified_time,
         creator,status,size,extendSuper
     </sql>
-    <select id="list" resultType="com.shih.icedms.dto.MatterDTO">
-        select * from(
-        SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,m.size,
-            u.actual_name as creator_name,
-        getMatterPermission(#{userId},m.id,m.creator,(
-            select is_admin from user where user.id=#{userId}
-        )) as `action`,m.extend_super
-        FROM matter m
-        LEFT JOIN `user` u on u.id=m.creator
-        where 1
-        <if test="parentId!=null">
-            and m.parent_id=#{parentId}
-        </if>
-        <if test="type!=null">
-            and m.type=#{type}
-        </if>
-        ) a
 
-    </select>
     <select id="listOfDtoWithoutAction" resultType="com.shih.icedms.dto.MatterDTO">
         SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,m.size,
         u.actual_name as creator_name,m.extend_super
@@ -48,20 +30,5 @@
         LEFT JOIN `user` u on u.id=m.creator
 
     </select>
-    <select id="listSearch" resultType="com.shih.icedms.dto.MatterDTO">
-        select * from(
-        SELECT m.id,m.parent_id,m.name,m.type,m.create_time,m.modified_time,m.creator,m.status,m.size,
-        u.actual_name as creator_name,
-        getMatterPermission(#{userId},m.id,m.creator,(
-        select is_admin from user where user.id=#{userId}
-        )) as `action`,m.extend_super
-        FROM matter m
-        LEFT JOIN `user` u on u.id=m.creator
-        where 1
-        ) a
-        where a.`action` >0
-        <if test="matterName!=null">
-            and name like concat('%',#{matterName},'%')
-        </if>
-    </select>
+
 </mapper>

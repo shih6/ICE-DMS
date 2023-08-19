@@ -138,7 +138,11 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
     @Override
     public Page<MatterDTO> listSearch(Page page,String matterName){
         User user =(User) SecurityUtils.getSubject().getPrincipal();
-        Page<MatterDTO> list = baseMapper.listSearch(page,matterName, user.getId(), 31);
+        Page<Matter> selectPage = baseMapper.selectPage(page, new LambdaQueryWrapper<Matter>().like(Matter::getName, matterName));
+
+        List<String> matterIds = selectPage.getRecords().stream().map(p -> p.getId()).collect(Collectors.toList());
+        page.setRecords(listOfDto(user.getId(), 1).stream().filter(p->matterIds.contains(p.getId())).collect(Collectors.toList()));
+        Page<MatterDTO> list = page;
         list.getRecords().forEach(i->{
             if(i.getSubMatters()==null){
                 i.setSubMatters(new ArrayList<>());
