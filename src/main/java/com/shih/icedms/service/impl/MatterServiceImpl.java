@@ -237,7 +237,6 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
         saveOrUpdateMatter(user.getId(), newHistory, matter,1);
         minioUtil.upload(file, newHistory.getObjectName());
         MatterDTO matterDTO = getMatterDtoById(matter.getId(), user.getId());
-        matterDTO.setSubMatters(list(matter.getId(), user.getId(),null));
         return matterDTO;
     }
     @Transactional
@@ -345,7 +344,7 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
     }
     @Override
     @Transactional(rollbackFor=Exception.class)
-    public List<String> deleteMatters(String matterIds) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException {
+    public List<String> deleteMatters(String matterIds) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
         List<String> successList=new ArrayList<>();
         for (String matterId : matterIds.split(",")) {
             if(deleteMatter(matterId)){

@@ -27,8 +27,8 @@ public interface MatterService extends IService<Matter> {
     MatterDTO getMatterDtoById(String matterId,String userId);
     MatterDTO uploadFile(MultipartFile multipartFile, String parentMatterId) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException;
     MatterDTO create(CreateDto createDto) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException;
-    Boolean deleteMatter(String matterId);
-    List<String> deleteMatters(String matterIds);
+    Boolean deleteMatter(String matterId) throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException;
+    List<String> deleteMatters(String matterIds) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException;
     MatterDTO getTreeV2(String userId,int type);
     void saveOrUpdateMatter(String userId, FileHistory newHistory, Matter matter, Integer version);
     boolean move(String matterId,String target);
