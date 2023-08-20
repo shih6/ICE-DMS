@@ -21,10 +21,13 @@ import lombok.val;
 import org.apache.shiro.SecurityUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.repository.init.ResourceReader;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
@@ -222,7 +225,10 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
             case "pptx":templateName="base.pptx";break;
             default:throw new FileNotFoundException(templateName+" 模板未定义");
         }
-        File file= ResourceUtils.getFile("classpath:doc_template/"+templateName);
+        //获取inu模板文件
+        Resource resource = new ClassPathResource("doc_template/"+templateName);
+        File file = File.createTempFile(CommonUtil.getFileNameWithOutExt(templateName), CommonUtil.getFilenameExtensionWithDot(templateName));
+        FileCopyUtils.copy(resource.getInputStream(), new FileOutputStream(file));
         if(!file.exists()){
             throw new FileNotFoundException(templateName+" 模板不存在");
         }
@@ -241,6 +247,7 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
         saveOrUpdateMatter(user.getId(), newHistory, matter,1);
         minioUtil.upload(file, newHistory.getObjectName());
         MatterDTO matterDTO = getMatterDtoById(matter.getId(), user.getId());
+        file.deleteOnExit();
         return matterDTO;
     }
     @Transactional
