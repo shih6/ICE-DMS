@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.shih</groupId>
 	<artifactId>ice-dms</artifactId>
-	<version>1.0</version>
+	<version>3.0</version>
 	<name>ICE DMS</name>
 	<description>ICE DMS</description>
 	<properties>
