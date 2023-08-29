@@ -35,6 +35,7 @@ public class ShiroConfig {
          * http://shiro.apache.org/web.html#urls-
          */
         Map<String, String> filterRuleMap = new LinkedHashMap<>();
+        filterRuleMap.put("/setting/web", "anon");
         filterRuleMap.put("/user/login", "anon");
         filterRuleMap.put("/user/dingtalkAuth","anon");
         filterRuleMap.put("/user/login/**", "anon");
