@@ -14,4 +14,5 @@ import java.util.List;
 public interface RoleService extends IService<Role> {
     boolean hasRole(String roleId);
     List<RoleDto> roleList();
+    Boolean createRole(RoleDto roleDto);
 }

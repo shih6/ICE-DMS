@@ -2,6 +2,9 @@ package com.shih.icedms.entity;
 
 import java.io.Serializable;
 import java.util.Date;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 /**
@@ -13,6 +16,7 @@ public class FileChanges implements Serializable {
     /**
      * 
      */
+    @TableId(type = IdType.AUTO)
     private Integer id;
 
     /**

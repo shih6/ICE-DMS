@@ -61,31 +61,31 @@ public class UserController {
     @GetMapping(value = "/user/login")
     public ApiResult passwordLogin(@RequestParam String userName,@RequestParam String passWord) {
         User user =usersService.getOne(new QueryWrapper<User>().lambda().eq(User::getUsername,userName));
-        String key = KEY_PREFIX + userName;
-        RedisAtomicInteger atomicInteger= new RedisAtomicInteger (key,redisTemplate.getConnectionFactory());
-        atomicInteger.expire(5, TimeUnit.MINUTES);
-        if (atomicInteger.incrementAndGet() > MAX){
-            // 如果用户登录失败次数大于5次，抛出锁定用户异常，并修改数据库用户状态字段
-            if (user != null && user.getStatus() == 1){
-                user.setStatus(2);// 设置为锁定状态
-                usersService.updateById(user);
-                log.info("锁定用户"+ userName);
-                return ApiResult.ERROR("账号已被锁定");
-            }
-        }
-        if(user!=null&&user.getStatus()==2){
-            return ApiResult.ERROR("账号已被锁定");
-        }
+//        String key = KEY_PREFIX + userName;
+//        RedisAtomicInteger atomicInteger= new RedisAtomicInteger (key,redisTemplate.getConnectionFactory());
+//        atomicInteger.expire(5, TimeUnit.MINUTES);
+//        if (atomicInteger.incrementAndGet() > MAX){
+//            // 如果用户登录失败次数大于5次，抛出锁定用户异常，并修改数据库用户状态字段
+//            if (user != null && user.getStatus() == 1){
+//                user.setStatus(2);// 设置为锁定状态
+//                usersService.updateById(user);
+//                log.info("锁定用户"+ userName);
+//                return ApiResult.ERROR("账号已被锁定");
+//            }
+//        }
+//        if(user!=null&&user.getStatus()==2){
+//            return ApiResult.ERROR("账号已被锁定");
+//        }
         try{
             if(user !=null&& BCrypt.checkpw(passWord, user.getPassword())){
-                atomicInteger.expire(0,TimeUnit.SECONDS);
+//                atomicInteger.expire(0,TimeUnit.SECONDS);
                 response.setHeader("Authorization", JwtUtil.createJWT(user.getUsername(),passWord));
                 return ApiResult.SUCCESS(user);
             }
         }catch (Exception e){
 
         }
-        return ApiResult.ERROR("账号或密码错误,还有"+(5-atomicInteger.get())+"次机会");
+        return ApiResult.ERROR("账号或密码错误,还有"+"次机会");
     }
 
     @ApiOperation("钉钉鉴权登录V2")

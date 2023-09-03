@@ -23,7 +23,10 @@ public class RoleController {
     @ApiOperation("创建Role")
     @PutMapping("/role")
     public ApiResult createRole(@RequestBody RoleDto roleDto){
-        return ApiResult.SUCCESS();
+        User user=(User) SecurityUtils.getSubject().getPrincipal();
+        roleDto.setCreator(user.getUsername());
+        Boolean flag = roleService.createRole(roleDto);
+        return ApiResult.SUCCESS(flag);
     }
     @ApiOperation("list")
     @GetMapping("/role")

@@ -1,6 +1,5 @@
 package com.shih.icedms.dto;
 
-import com.shih.icedms.entity.Role;
 import com.shih.icedms.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,7 +11,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RoleDto extends Role {
+public class RoleDto {
     private Integer id;
 
     private String roleName;
