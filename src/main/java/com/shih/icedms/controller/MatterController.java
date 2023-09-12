@@ -9,7 +9,6 @@ import com.shih.icedms.dto.MatterDTO;
 import com.shih.icedms.dto.MatterSearchDTO;
 import com.shih.icedms.entity.FileHistory;
 import com.shih.icedms.entity.Matter;
-import com.shih.icedms.entity.MatterPermissions;
 import com.shih.icedms.entity.User;
 import com.shih.icedms.enums.ActionEnum;
 import com.shih.icedms.service.FileHistoryService;
@@ -25,6 +24,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
@@ -126,37 +125,32 @@ public class MatterController {
         minioUtil.download(fileHistory.getObjectName(),res, matter.getName());
         return ApiResult.SUCCESS();
     }
-    @ApiOperation(value = "下载文件")
-    @GetMapping ("/matter/downloadByToken/{token}")
+    @ApiOperation(value = "使用token下载文件")
+    @RequestMapping ("/matter/downloadByToken/{token}")
     public ApiResult downloadByToken(@PathVariable String token,HttpServletResponse res) throws MinioException, IOException {
         try {
             Claims claims = JwtUtil.parseJWT(token);
             String objectName = claims.get("objectName").toString();
             String fileName = claims.get("fileName").toString();
-            minioUtil.download(objectName,res, fileName);
+            minioUtil.download(objectName,res,fileName);
         } catch (JwtException e) {
             return ApiResult.ERROR("链接过期");
         }
         return ApiResult.SUCCESS(token);
     }
-    @ApiOperation(value = "临时访问地址")
-    @GetMapping ("/matter/getTempAccessToken")
-    public ApiResult getTempAccessToken(@RequestParam String matterId, @RequestParam(required = false) String version, HttpServletResponse res) throws MinioException, IOException {
+    @ApiOperation(value = "获取下载预览token")
+    @GetMapping ("/matter/getPreViewTOken")
+    public ApiResult getPreViewToken(@RequestParam String matterId, @RequestParam(required = false) String version, HttpServletResponse res) throws MinioException, IOException {
+        matterPermissionsService.checkMatterPermission(matterId, ActionEnum.View);
+        String token=matterService.getMatterAuthToken(matterId, version, res);
+        return ApiResult.SUCCESS(token);
+    }
+
+    @ApiOperation(value = "获取下载token")
+    @GetMapping ("/matter/getDownloadToken")
+    public ApiResult getDownloadToken(@RequestParam String matterId, @RequestParam(required = false) String version, HttpServletResponse res) throws MinioException, IOException {
         matterPermissionsService.checkMatterPermission(matterId, ActionEnum.Download);
-        Matter matter = matterService.getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId, matterId).eq(Matter::getType,1));
-        FileHistory fileHistory=fileHistoryService.getOne(new LambdaQueryWrapper<FileHistory>().
-                eq(version!=null,FileHistory::getVersion,version).
-                eq(FileHistory::getMatterId,matter.getId()).
-                orderBy(version==null,false,FileHistory::getCreated).
-                last("limit 1"));
-        if(fileHistory==null){
-            return ApiResult.ERROR("version not exists");
-        }
-        res.setHeader("Version",fileHistory.getVersion().toString());
-        Map<String,Object> map=new HashMap<>();
-        map.put("objectName",fileHistory.getObjectName());
-        map.put("fileName",matter.getName());
-        String token= JwtUtil.createJWT(map, (long) (24*60*60));
+        String token=matterService.getMatterAuthToken(matterId, version, res);
         return ApiResult.SUCCESS(token);
     }
     @ApiOperation(value = "文件删除")
@@ -178,11 +172,6 @@ public class MatterController {
         String matterIds= (String) map.get("matterIds");
         List<String> successList = matterService.deleteMatters(matterIds);
         return ApiResult.SUCCESS(successList);
-    }
-    @ApiOperation(value = "文件下载")
-    @GetMapping("/downloadByObjectName")
-    public void downloadByObjectName(@RequestParam String objectName, HttpServletResponse res) throws MinioException, IOException {
-        minioUtil.download(objectName,res,"changes.zip");
     }
     @ApiOperation(value = "重命名文件")
     @PutMapping("/matter/rename")
