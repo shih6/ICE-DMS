@@ -15,6 +15,7 @@ import com.shih.icedms.enums.ActionEnum;
 import com.shih.icedms.mapper.MatterMapper;
 import com.shih.icedms.service.*;
 import com.shih.icedms.utils.CommonUtil;
+import com.shih.icedms.utils.JwtUtil;
 import com.shih.icedms.utils.MinioUtil;
 import io.minio.errors.*;
 import lombok.val;
@@ -33,6 +34,7 @@ import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.rmi.ConnectException;
 import java.rmi.RemoteException;
@@ -414,6 +416,22 @@ public class MatterServiceImpl extends ServiceImpl<MatterMapper, Matter>
             }
         }
         return root;
+    }
+    public String getMatterAuthToken(String matterId,String version, HttpServletResponse res){
+        Matter matter = getOne(new LambdaQueryWrapper<Matter>().eq(Matter::getId, matterId).eq(Matter::getType,1));
+        FileHistory fileHistory=fileHistoryService.getOne(new LambdaQueryWrapper<FileHistory>().
+                eq(version!=null,FileHistory::getVersion,version).
+                eq(FileHistory::getMatterId,matter.getId()).
+                orderBy(version==null,false,FileHistory::getCreated).
+                last("limit 1"));
+        if(fileHistory==null){
+           throw new RuntimeException("version not exists");
+        }
+        res.setHeader("Version",fileHistory.getVersion().toString());
+        Map<String,Object> map=new HashMap<>();
+        map.put("objectName",fileHistory.getObjectName());
+        map.put("fileName",matter.getName());
+        return JwtUtil.createJWT(map, (long) (24*60*60));
     }
 
 }

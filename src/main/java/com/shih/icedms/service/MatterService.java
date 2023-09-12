@@ -8,8 +8,10 @@ import com.shih.icedms.entity.FileHistory;
 import com.shih.icedms.entity.Matter;
 import io.minio.errors.*;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.rmi.ConnectException;
 import java.security.InvalidKeyException;
@@ -32,4 +34,6 @@ public interface MatterService extends IService<Matter> {
     MatterDTO getTreeV2(String userId,int type);
     void saveOrUpdateMatter(String userId, FileHistory newHistory, Matter matter, Integer version);
     boolean move(String matterId,String target);
+
+    String getMatterAuthToken(String matterId,String version, HttpServletResponse res);
 }
