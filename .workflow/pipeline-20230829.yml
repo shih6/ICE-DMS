@@ -1,8 +1,12 @@
 version: '1.0'
 name: pipeline-20230829
-displayName: pipeline-20230829
+displayName: AutoBuilding
 triggers:
   trigger: manual
+  pr:
+    branches:
+      precise:
+        - master
 stages:
   - name: stage-3362fb74
     displayName: 未命名
