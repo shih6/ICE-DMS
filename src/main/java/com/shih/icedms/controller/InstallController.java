@@ -1,5 +1,6 @@
 package com.shih.icedms.controller;
 
+import com.shih.icedms.config.DingTalkConfig;
 import com.shih.icedms.dto.ApiResult;
 import com.shih.icedms.entity.Setting;
 import com.shih.icedms.service.SettingService;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +27,8 @@ public class InstallController {
     private AccessTokenUtil accessTokenUtil;
     @Autowired
     private SettingService settingService;
+    @Resource
+    private DingTalkConfig dingTalkConfig;
     @GetMapping("/install/test")
     public ApiResult installTest(){
         //MybatisPlus测试
@@ -59,6 +63,16 @@ public class InstallController {
         keyList.add("DOCUMENT_CALLBACK_HOST");
         keyList.add("DOCUMENT_SERVER_HOST");
         List<Setting> settingList=settingService.listByIds(keyList);
+        for (Setting setting : settingList) {
+            if(setting.getKeyName().equals("DINGTALK_APP_KEY")){
+                if(setting.getValue().isBlank()){
+                    if(!dingTalkConfig.getAppKey().isBlank()){
+                        setting.setValue(dingTalkConfig.getAppKey());
+                        settingService.updateById(setting);
+                    }
+                }
+            }
+        }
         return ApiResult.SUCCESS(settingList);
 
     }
