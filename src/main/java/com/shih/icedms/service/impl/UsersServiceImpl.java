@@ -45,7 +45,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, User>
             return getRIdByUnionId(unionId);
         }catch (Exception e){
             log.error(e.getMessage(),e);
-            throw new RuntimeException("登录失败");
+            throw new RuntimeException("getRId登录失败");
         }finally {
             log.info("EndW9pDGYqSpe <getUserIdByDingTalkAuthCode>");
         }
@@ -60,7 +60,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, User>
             return rsp.getResult().getUserid();
         }catch (ApiException e){
             log.error(e.getMessage(),e);
-            throw new RuntimeException("登录失败");
+            throw new RuntimeException("getRIdByUnionId登录失败");
         }catch (Exception e){
             throw e;
         }finally {

@@ -15,6 +15,7 @@ import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
 
 @Component
+@Slf4j
 public class AccessTokenUtil {
     @Resource
     private RedisTemplate redisTemplate;
@@ -26,6 +27,7 @@ public class AccessTokenUtil {
         try {
             accessToken = redisTemplate.opsForValue().get("accessToken");
         }catch (RedisConnectionFailureException e){
+            log.error(e.getMessage());
             throw e;
         }
         if(accessToken==null){
@@ -38,9 +40,11 @@ public class AccessTokenUtil {
             try {
                 response = client.execute(request);
             } catch (ApiException e) {
+                log.error(e.getMessage());
                 throw new RuntimeException(e);
             }
             if(response.getAccessToken()==null){
+                log.error(response.toString());
                 throw new RuntimeException(response.getErrmsg());
             }
             as.setAccessToken(response.getAccessToken());
