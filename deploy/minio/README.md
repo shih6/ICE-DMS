@@ -1,6 +1,11 @@
+# Download Minio Server  
+https://www.minio.org.cn/download.shtml  
+下载合适的版本
+
 # windows
-在windows上提供以服务的方式部署  
-首先修改xml配置文件
+在windows上提供以服务的方式部署
+首先修改xml配置文件  
+更多配置详见[winsw项目](https://github.com/winsw/winsw/blob/v3/docs/xml-config-file.md)
 ```xml
 <?xml version="1.0" encoding="GB2312" ?>
 <service>

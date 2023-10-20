@@ -1,4 +1,7 @@
 # ICE DMS
+only office版本要求为6.4.2  
+新版强制要求设置jwt,暂未适配  
+
 使用nginx部署时注意  
 需要修改以下设置
 重点在`client_max_body_size`和`proxy_read_timeout`  
