@@ -46,13 +46,12 @@ public class MinioUtil {
      * 查看存储bucket是否存在
      * @return boolean
      */
-    public Boolean bucketExists(String bucketName) {
+    public Boolean bucketExists(String bucketName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         Boolean found;
         try {
             found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
         } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            throw e;
         }
         return found;
     }
@@ -60,14 +59,13 @@ public class MinioUtil {
      * 创建存储bucket
      * @return Boolean
      */
-    public Boolean makeBucket(String bucketName) {
+    public Boolean makeBucket(String bucketName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         try {
             minioClient.makeBucket(MakeBucketArgs.builder()
                     .bucket(bucketName)
                     .build());
         } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            throw e;
         }
         return true;
     }
@@ -75,28 +73,26 @@ public class MinioUtil {
      * 删除存储bucket
      * @return Boolean
      */
-    public Boolean removeBucket(String bucketName) {
+    public Boolean removeBucket(String bucketName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         try {
             minioClient.removeBucket(RemoveBucketArgs.builder()
                     .bucket(bucketName)
                     .build());
         } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            throw e;
         }
         return true;
     }
     /**
      * 获取全部bucket
      */
-    public List<Bucket> getAllBuckets() {
+    public List<Bucket> getAllBuckets() throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         try {
             List<Bucket> buckets = minioClient.listBuckets();
             return buckets;
         } catch (Exception e) {
-            e.printStackTrace();
+            throw e;
         }
-        return null;
     }
     /**
      * 文件上传
@@ -166,16 +162,15 @@ public class MinioUtil {
      * @param fileName
      * @return
      */
-    public String preview(String fileName){
+    public String preview(String fileName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         // 查看文件地址
         GetPresignedObjectUrlArgs build = new GetPresignedObjectUrlArgs().builder().bucket(prop.getBucketName()).object(fileName).method(Method.GET).build();
         try {
             String url = minioClient.getPresignedObjectUrl(build);
             return url;
         } catch (Exception e) {
-            e.printStackTrace();
+            throw e;
         }
-        return null;
     }
     public StatObjectResponse getObjectStatus(String objectName){
         StatObjectResponse statObjectResponse;
