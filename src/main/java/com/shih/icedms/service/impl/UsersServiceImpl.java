@@ -18,7 +18,7 @@ import com.shih.icedms.mapper.UsersMapper;
 import com.shih.icedms.service.UsersService;
 import com.shih.icedms.utils.AccessTokenUtil;
 import com.taobao.api.ApiException;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -29,7 +29,7 @@ import javax.annotation.Resource;
 * @createDate 2023-06-04 18:23:32
 */
 @Service
-@Log4j
+@Slf4j
 public class UsersServiceImpl extends ServiceImpl<UsersMapper, User>
     implements UsersService{
     @Resource
