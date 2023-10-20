@@ -1,0 +1,2 @@
+nginx配置文件模板  
+文件加载路径详见main和vhost模板
