@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="GB2312" ?>
+<service>
+  <!-- 该服务的唯一标识 -->
+  <id>Minio Service</id>
+  <!-- 注册为系统服务的名称 -->
+  <name>Minio Service</name>
+  <!-- 对服务的描述 -->
+  <description>Minio对象存储服务</description>
+  <workingdirectory>E:/minio</workingdirectory>
+  <!-- 将java程序添加到系统服务 -->
+  <executable>E:/minio/minio.exe</executable>
+  <!-- 执行的参数 -->
+  <arguments>server E:\minio\data --certs-dir E:\minio\config\certs --console-address ":9090" --address ":9000"</arguments>
+  <logpath>E:\minio\logs</logpath>
+  <log mode="roll-by-size">
+    <!-- 一个日志文件大小，单位是k-->
+    <sizeThreshold>60</sizeThreshold>
+    <keepFiles>3</keepFiles>
+  </log>
+</service>
