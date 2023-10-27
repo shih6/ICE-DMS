@@ -4,8 +4,8 @@ spring:
     static-path-pattern: /static/**
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3307/icedms?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8
-    username: root
+    url: jdbc:mysql://127.0.0.1:3306/ice?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8
+    username: admin
     password: p@ssw0rd
     type: com.alibaba.druid.pool.DruidDataSource #Druid类型
     druid:
@@ -40,7 +40,7 @@ logging:
   level:
     com.shih: info
   file:
-    path: e:/wwwroot/log1  #日志保存路径
+    path: /log  #日志保存路径
 minio:
   endpoint: ${setting.minioServerHost} #Minio服务所在地址
   bucketName: tulaoda #存储桶名称
@@ -66,3 +66,8 @@ dingtalk:
   appsecret: BDl3Bm_J-oEpX7qIcyNenrfm2qc8GPHj244dt5McXb5rVV3jrFFpftnmS8_kIrms
   aes_key: mjDbijH8qfXWmtbUJdjAetyJdCcweUmMw9k72sPEgmS
   token: apDZfA6QKQUEu3PBYOHqPUXdGJfK
+plugin:
+  runMode: dev
+  mainPackage: com.shih
+  pluginPath:
+    - D://project//ICEDMS//plugins

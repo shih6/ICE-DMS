@@ -53,6 +53,7 @@ public class ShiroConfig {
         filterRuleMap.put("/webjars/**","anon");
         filterRuleMap.put("/swagger-resources/**","anon");
         filterRuleMap.put("/v2/**","anon");
+        filterRuleMap.put("/plugins/**","anon");
         //sql监控
         filterRuleMap.put("/druid/**","anon");
         // 所有请求通过JWT Filter
